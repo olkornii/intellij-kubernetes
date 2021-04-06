@@ -1,49 +1,67 @@
 <idea-plugin>
-    <id>org.jboss.tools.intellij.kubernetes</id>
-    <name>IntelliJ Kubernetes by Red Hat</name>
-    <vendor email="support@redhat.com" url="http://www.redhat.com">Red Hat</vendor>
-
+    <id>com.redhat.devtools.intellij.kubernetes</id>
+    <name>Kubernetes by Red Hat</name>
+    <vendor email="developers@redhat.com" url="http://www.redhat.com">Red-Hat</vendor>
+    <description>
+        <![CDATA[
+        <p>A plugin for interacting with Kubernetes and OpenShift clusters.</p>
+        <p>The plugin provides functionalities and user experiences that are very close to the Kubernetes extension for vscode (Visual Studio Code Kubernetes Tools).</p>
+        ]]>
+    </description>
+    <change-notes>
+        <![CDATA[
+        <p></p>
+        <h3>1.3.0</h3>
+        <ul>
+            <li><a href="https://github.com/redhat-developer/intellij-kubernetes/issues/172">PluginException: Icon cannot be found in 'AllIcons.Modules.DeleteContentFolder'</a></li>
+            <li><a href="https://github.com/redhat-developer/intellij-kubernetes/issues/132">Should stop watching resources when tree node is collapsed </a></li>
+        </ul>
+        <p></p>
+        ]]>
+    </change-notes>
     <depends>com.intellij.modules.lang</depends>
 
     <extensions defaultExtensionNs="com.intellij">
         <toolWindow id="Kubernetes"
                     anchor="left"
-                    factoryClass="org.jboss.tools.intellij.kubernetes.KubernetesToolWindowFactory"
+                    factoryClass="com.redhat.devtools.intellij.kubernetes.KubernetesToolWindowFactory"
                     icon="/META-INF/pluginIcon13x13.svg"/>
-        <applicationService serviceInterface="org.jboss.tools.intellij.kubernetes.model.IResourceModel"
-                        serviceImplementation="org.jboss.tools.intellij.kubernetes.model.ResourceModel" />
+        <applicationService serviceInterface="com.redhat.devtools.intellij.kubernetes.model.IResourceModel"
+                        serviceImplementation="com.redhat.devtools.intellij.kubernetes.model.ResourceModel" />
     </extensions>
 
     <extensionPoints>
         <extensionPoint name="resourceProvider"
-                        interface="org.jboss.tools.intellij.kubernetes.model.resource.IResourcesProviderFactory"/>
+                        interface="com.redhat.devtools.intellij.kubernetes.model.resource.IResourcesProviderFactory"/>
         <extensionPoint name="structureContribution"
-                        interface="org.jboss.tools.intellij.kubernetes.tree.ITreeStructureContributionFactory"/>
+                        interface="com.redhat.devtools.intellij.kubernetes.tree.ITreeStructureContributionFactory"/>
     </extensionPoints>
 
     <actions>
-        <group id="org.jboss.tools.intellij.kubernetes.tree" popup="true">
+        <group id="com.redhat.devtools.intellij.kubernetes.tree" popup="true">
             <!-- Application Explorer -->
-            <action class="org.jboss.tools.intellij.kubernetes.actions.UseNamespaceAction"
-                    id="org.jboss.tools.intellij.kubernetes.actions.UseNamespaceAction"
-                    text="Use Namespace"
-                    icon="AllIcons.Nodes.EmptyNode"/>
-            <action class="org.jboss.tools.intellij.kubernetes.actions.UseProjectAction"
-                    id="org.jboss.tools.intellij.kubernetes.actions.UseProjectAction"
-                    text="Use Project"
-                    icon="AllIcons.Nodes.EmptyNode"/>
-            <action class="org.jboss.tools.intellij.kubernetes.actions.RefreshAction"
-                    id="org.jboss.tools.intellij.kubernetes.actions.RefreshAction"
-                    text="Refresh"
-                    icon="AllIcons.Actions.Refresh"/>
-                    <!-- icon via class: has to be in 'icons' package and name ending with *Icons -->
-                    <!-- https://www.jetbrains.org/intellij/sdk/docs/reference_guide/work_with_icons_and_images.html -->
-            <action class="org.jboss.tools.intellij.kubernetes.actions.SetAsCurrentClusterAction"
-                    id="org.jboss.tools.intellij.kubernetes.actions.SetAsCurrentClusterAction"
+            <!-- action icon via class: has to be in 'icons' package and name ending with *Icons -->
+            <!-- https://www.jetbrains.org/intellij/sdk/docs/reference_guide/work_with_icons_and_images.html -->
+            <action class="com.redhat.devtools.intellij.kubernetes.actions.SetAsCurrentClusterAction"
+                    id="com.redhat.devtools.intellij.kubernetes.actions.SetAsCurrentClusterAction"
                     text="Set as Current Cluster"
                     icon="AllIcons.Nodes.EmptyNode"/>
-            <!-- icon via class: has to be in 'icons' package and name ending with *Icons -->
-            <!-- https://www.jetbrains.org/intellij/sdk/docs/reference_guide/work_with_icons_and_images.html -->
+            <action class="com.redhat.devtools.intellij.kubernetes.actions.UseNamespaceAction"
+                    id="com.redhat.devtools.intellij.kubernetes.actions.UseNamespaceAction"
+                    text="Use Namespace"
+                    icon="AllIcons.Nodes.EmptyNode"/>
+            <action class="com.redhat.devtools.intellij.kubernetes.actions.UseProjectAction"
+                    id="com.redhat.devtools.intellij.kubernetes.actions.UseProjectAction"
+                    text="Use Project"
+                    icon="AllIcons.Nodes.EmptyNode"/>
+            <action class="com.redhat.devtools.intellij.kubernetes.actions.RefreshAction"
+                    id="com.redhat.devtools.intellij.kubernetes.actions.RefreshAction"
+                    text="Refresh"
+                    icon="AllIcons.Actions.Refresh"/>
+            <action class="com.redhat.devtools.intellij.kubernetes.actions.DeleteResourceAction"
+                    id="com.redhat.devtools.intellij.kubernetes.actions.DeleteResourceAction"
+                    text="Delete"
+                    icon="AllIcons.Actions.Close"/>
         </group>
     </actions>
 
