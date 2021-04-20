@@ -283,6 +283,6 @@ uninstall:
 	- kubectl delete clusterrolebindings.rbac.authorization.k8s.io "olm-operator-binding-openshift-operator-lifecycle-manager"
 
 .PHONY: run-local
-run-local: build-linux build-wait build-util-linux
+run-local: build-linux build-util-linux
 	rm -rf build
 	. ./scripts/build_local.sh
