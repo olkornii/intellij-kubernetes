@@ -38,7 +38,7 @@ public class BasicTests {
 
     private static RemoteRobot robot;
 
-    @BeforeAll
+    @BeforeAll 
     public static void connect() throws InterruptedException {
         GlobalUtils.waitUntilIntelliJStarts(8082);
         robot = GlobalUtils.getRemoteRobotConnection(8082);
