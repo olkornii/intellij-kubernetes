@@ -27,6 +27,10 @@ $(CMDS): version_flags=-ldflags "-X $(PKG)/pkg/version.GitCommit=$(GIT_COMMIT) -
 $(CMDS):
 	$(arch_flags) go $(build_cmd) $(MOD_FLAGS) $(version_flags) -tags "json1" -o bin/$(shell basename $@) $@
 
+# Phony prerequisite for targets that rely on the go build cache to determine staleness.
+.PHONY: FORCE
+FORCE:
+
 clean:
 	@rm -rf cover.out
 	@rm -rf bin
