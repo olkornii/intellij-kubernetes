@@ -27,6 +27,14 @@ $(CMDS): version_flags=-ldflags "-X $(PKG)/pkg/version.GitCommit=$(GIT_COMMIT) -
 $(CMDS):
 	$(arch_flags) go $(build_cmd) $(MOD_FLAGS) $(version_flags) -tags "json1" -o bin/$(shell basename $@) $@
 
+clean:
+	@rm -rf cover.out
+	@rm -rf bin
+	@rm -rf test/e2e/resources
+	@rm -rf test/e2e/test-resources
+	@rm -rf test/e2e/log
+	@rm -rf e2e.namespace
+
 .PHONY: run-local
 run-local: build-linux build-wait build-util-linux
 	rm -rf build
