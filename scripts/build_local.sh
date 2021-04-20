@@ -15,7 +15,7 @@ fi
 
 # kubectl get serviceaccount
 
-kubectl -n kube-system describe secret $(sudo kubectl -n kube-system get secret | (grep default || echo "$_") | awk '{print $1}') | grep token: | awk '{print $2}'
+# kubectl -n kube-system describe secret $(sudo kubectl -n kube-system get secret | (grep default || echo "$_") | awk '{print $1}') | grep token: | awk '{print $2}'
 
 # docker build -f e2e.Dockerfile -t quay.io/operator-framework/olm:local -t quay.io/operator-framework/olm-e2e:local ./bin
 # docker build -f test/e2e/hang.Dockerfile -t hang:10 ./bin
