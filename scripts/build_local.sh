@@ -1,7 +1,7 @@
  #!/usr/bin/env bash
 
 # Note: run from root
-# This is used to start and build services for running e2e tests
+# This is used to run and connect minikube cluster
 
 set -e
 
@@ -13,4 +13,5 @@ if [ -z "$NO_MINIKUBE" ]; then
   kubectl config use-context minikube
 fi
 
+# Check if cluster is in config, if not - here will be the empty labels
 kubectl config view
