@@ -5,7 +5,7 @@
 
 set -e
 
-[ -x "$(command -v kind)" ] && [[ "$(kubectl config current-context)" =~ ^kind-? ]] && KIND=1 NO_MINIKUBE=1
+[ -x "$(command -v kind)" ] && [ "$(kubectl config current-context)" =~ ^kind-? ] && KIND=1 NO_MINIKUBE=1
 
 if [ -z "$NO_MINIKUBE" ]; then
   pgrep -f "[m]inikube" >/dev/null || minikube start --kubernetes-version="v1.16.4" --extra-config=apiserver.v=4 || { echo 'Cannot start minikube.'; exit 1; }
