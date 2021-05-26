@@ -61,11 +61,21 @@ public class BasicTests {
             String clusterText = kubernetesToolsFixture.kubernetesViewTree().findAllText().get(0).getText();
             assertTrue(clusterText.contains("minikube"));
             List<RemoteText> all_text_1 = kubernetesToolsFixture.kubernetesViewTree().findAllText();
+            boolean needClickMinikube = true;
             for (RemoteText text_for_print : all_text_1){
                 System.out.println(text_for_print.getText());
+                if (text_for_print.getText().contains("Namespaces")){
+                    needClickMinikube = false;
+                }
             }
-            kubernetesToolsFixture.kubernetesViewTree().findText(clusterText).doubleClick(MouseButton.LEFT_BUTTON);
+            if (needClickMinikube){
+                kubernetesToolsFixture.kubernetesViewTree().findText(clusterText).doubleClick(MouseButton.LEFT_BUTTON);
+            }
             waitFor(Duration.ofSeconds(15), Duration.ofSeconds(1), "Kubernetes Tree View is not available.", () -> isNamespaceOpened(kubernetesToolsFixture));
+            List<RemoteText> all_text_2 = kubernetesToolsFixture.kubernetesViewTree().findAllText();
+            for (RemoteText text_for_print : all_text_2){
+                System.out.println(text_for_print.getText());
+            }
             kubernetesToolsFixture.kubernetesViewTree().findText("Namespaces").doubleClick(MouseButton.LEFT_BUTTON);
             waitFor(Duration.ofSeconds(15), Duration.ofSeconds(1), "Namespace is not available.", () -> isNamespaceLoaded(kubernetesToolsFixture));
 //            String namespaces = kubernetesToolsFixture.kubernetesViewTree().findAllText().get(1).getText();
