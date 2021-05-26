@@ -58,9 +58,9 @@ public class BasicTests {
             toolWindowsPaneFixture.stripeButton("Kubernetes").click();
             final KubernetesToolsFixture kubernetesToolsFixture = robot.find(KubernetesToolsFixture.class);
             waitFor(Duration.ofSeconds(15), Duration.ofSeconds(1), "Kubernetes Tree View is not available.", () -> isKubernetesViewTreeAvailable(kubernetesToolsFixture));
-            String clusterText = kubernetesToolsFixture.kubernetesViewTree().findAllText().get(1).getText();
+            String clusterText = kubernetesToolsFixture.kubernetesViewTree().findAllText().get(0).getText();
             assertTrue(clusterText.contains("minikube"));
-            kubernetesToolsFixture.kubernetesViewTree().findAllText().get(1).doubleClick(MouseButton.LEFT_BUTTON);
+            kubernetesToolsFixture.kubernetesViewTree().findAllText().get(0).doubleClick(MouseButton.LEFT_BUTTON);
             kubernetesToolsFixture.kubernetesViewTree().findText("Namespaces").doubleClick(MouseButton.LEFT_BUTTON);
             waitFor(Duration.ofSeconds(15), Duration.ofSeconds(1), "Namespace is not available.", () -> isNamespaceLoaded(kubernetesToolsFixture));
 //            String namespaces = kubernetesToolsFixture.kubernetesViewTree().findAllText().get(1).getText();
