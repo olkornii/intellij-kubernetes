@@ -12,8 +12,10 @@ package org.jboss.tools.intellij.kubernetes;
 
 import com.intellij.remoterobot.RemoteRobot;
 
+import com.intellij.remoterobot.fixtures.ComponentFixture;
 import com.intellij.remoterobot.fixtures.dataExtractor.RemoteText;
 import com.intellij.remoterobot.utils.WaitForConditionTimeoutException;
+import org.assertj.swing.core.MouseButton;
 import org.jboss.tools.intellij.kubernetes.fixtures.dialogs.NewProjectDialogFixture;
 import org.jboss.tools.intellij.kubernetes.fixtures.dialogs.WelcomeFrameDialogFixture;
 import org.jboss.tools.intellij.kubernetes.fixtures.mainIdeWindow.KubernetesToolsFixture;
@@ -22,9 +24,11 @@ import org.jboss.tools.intellij.kubernetes.utils.GlobalUtils;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
+import static com.intellij.remoterobot.search.locators.Locators.byXpath;
 import static com.intellij.remoterobot.stepsProcessing.StepWorkerKt.step;
 import static com.intellij.remoterobot.utils.RepeatUtilsKt.waitFor;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 
 import java.time.Duration;
 import java.util.List;
@@ -54,9 +58,26 @@ public class BasicTests {
             toolWindowsPaneFixture.stripeButton("Kubernetes").click();
             final KubernetesToolsFixture kubernetesToolsFixture = robot.find(KubernetesToolsFixture.class);
             waitFor(Duration.ofSeconds(15), Duration.ofSeconds(1), "Kubernetes Tree View is not available.", () -> isKubernetesViewTreeAvailable(kubernetesToolsFixture));
-            String clusterText = kubernetesToolsFixture.kubernetesViewTree().findAllText().get(0).getText();
+            String clusterText = kubernetesToolsFixture.kubernetesViewTree().findAllText().get(1).getText();
             assertTrue(clusterText.contains("minikube"));
-    	});
+            kubernetesToolsFixture.kubernetesViewTree().findAllText().get(1).doubleClick(MouseButton.LEFT_BUTTON);
+            kubernetesToolsFixture.kubernetesViewTree().findText("Namespaces").doubleClick(MouseButton.LEFT_BUTTON);
+            waitFor(Duration.ofSeconds(15), Duration.ofSeconds(1), "Namespace is not available.", () -> isNamespaceLoaded(kubernetesToolsFixture));
+//            String namespaces = kubernetesToolsFixture.kubernetesViewTree().findAllText().get(1).getText();
+            ComponentFixture try_to_find = robot.find(ComponentFixture.class, byXpath("//div[@class='Tree']"));
+            List<RemoteText> all_text = try_to_find.findAllText();
+            System.out.println("ALOMALO ====================================================================");
+//            System.out.println(all_text);
+            for (RemoteText text_for_print : all_text){
+                System.out.println(text_for_print.getText());
+                assertFalse(text_for_print.getText().contains("Error: Could not get"));
+            }
+//            try {
+//                Thread.sleep(15000);
+//            } catch (InterruptedException e) {
+//                e.printStackTrace();
+//            }
+        });
  	}
 
  	private static void createEpmtyProject(){
@@ -72,7 +93,7 @@ public class BasicTests {
         GlobalUtils.waitUntilAllTheBgTasksFinish(robot);
     }
 
-    private static boolean isStripeButtonAvailable(ToolWindowsPaneFixture toolWindowsPaneFixture, String label) {
+    private static boolean isStripeButtonAvailable(ToolWindowsPaneFixture toolWindowsPaneFixture, String label) { // loading...
         try {
             toolWindowsPaneFixture.stripeButton(label);
         } catch (WaitForConditionTimeoutException e) {
@@ -86,6 +107,16 @@ public class BasicTests {
         String firstText = allText.get(0).getText();
         if("Nothing to show".equals(firstText)){
             return false;
+        }
+        return true;
+    }
+
+    private static boolean isNamespaceLoaded(KubernetesToolsFixture kubernetesToolsFixture){
+        List<RemoteText> allTextFromTree = kubernetesToolsFixture.kubernetesViewTree().findAllText();
+        for (RemoteText actualText : allTextFromTree){
+            if (actualText.getText().contains("loading...")){
+                return false;
+            }
         }
         return true;
     }
