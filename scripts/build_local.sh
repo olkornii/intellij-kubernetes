@@ -9,3 +9,4 @@ kubectl config use-context minikube
 
 # Check if cluster is in config, if not - here will be the empty labels
 kubectl config view
+minikube status
