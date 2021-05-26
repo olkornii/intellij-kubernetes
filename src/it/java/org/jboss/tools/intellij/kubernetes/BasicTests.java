@@ -58,7 +58,7 @@ public class BasicTests {
             toolWindowsPaneFixture.stripeButton("Kubernetes").click();
             final KubernetesToolsFixture kubernetesToolsFixture = robot.find(KubernetesToolsFixture.class);
             waitFor(Duration.ofSeconds(15), Duration.ofSeconds(1), "Kubernetes Tree View is not available.", () -> isKubernetesViewTreeAvailable(kubernetesToolsFixture));
-            String clusterText = kubernetesToolsFixture.kubernetesViewTree().findAllText().get(1).getText();
+            String clusterText = kubernetesToolsFixture.kubernetesViewTree().findAllText().get(0).getText();
             assertTrue(clusterText.contains("minikube"));
             List<RemoteText> all_text_1 = kubernetesToolsFixture.kubernetesViewTree().findAllText();
             for (RemoteText text_for_print : all_text_1){
