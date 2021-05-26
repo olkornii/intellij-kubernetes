@@ -61,6 +61,7 @@ public class BasicTests {
             String clusterText = kubernetesToolsFixture.kubernetesViewTree().findAllText().get(0).getText();
             assertTrue(clusterText.contains("minikube"));
             kubernetesToolsFixture.kubernetesViewTree().findAllText().get(0).doubleClick(MouseButton.LEFT_BUTTON);
+            waitFor(Duration.ofSeconds(15), Duration.ofSeconds(1), "Kubernetes Tree View is not available.", () -> isNamespaceOpened(kubernetesToolsFixture));
             kubernetesToolsFixture.kubernetesViewTree().findText("Namespaces").doubleClick(MouseButton.LEFT_BUTTON);
             waitFor(Duration.ofSeconds(15), Duration.ofSeconds(1), "Namespace is not available.", () -> isNamespaceLoaded(kubernetesToolsFixture));
 //            String namespaces = kubernetesToolsFixture.kubernetesViewTree().findAllText().get(1).getText();
@@ -109,6 +110,16 @@ public class BasicTests {
             return false;
         }
         return true;
+    }
+
+    private static boolean isNamespaceOpened(KubernetesToolsFixture kubernetesToolsFixture){
+        List<RemoteText> allTextFromTree = kubernetesToolsFixture.kubernetesViewTree().findAllText();
+        for (RemoteText actualText : allTextFromTree){
+            if (actualText.getText().contains("Namespaces")){
+                return true;
+            }
+        }
+        return false;
     }
 
     private static boolean isNamespaceLoaded(KubernetesToolsFixture kubernetesToolsFixture){
