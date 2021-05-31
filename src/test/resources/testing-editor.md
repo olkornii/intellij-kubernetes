@@ -2,11 +2,15 @@
 1. "Edit..." resource
 
 -> editor has corresponding schema selected (bottom right combo "Schema:")
+Bugs:
+1. no schema for "Projects"
 
 **Editor title is <resource-name>@<namespace-name>.yml**
 1. "Edit..." resource
 
 -> editor has title matching pattern <resource>@<namespace>.yml
+Bugs:
+1. in the Namespaces title is only the <resource>.yml
 
 **Editor file will rename file to <resource>@<namespace>(2).yml if name already used**
 1. "Edit..." resource
@@ -48,6 +52,8 @@
 
 -> new resource appears in tree
 -> editor title changes
+Bugs:
+1. editor title contains (1), but real name don't.
 
 **Error notification disappears**
 1. "Edit..." resource
@@ -86,6 +92,10 @@
 2. restart IJ
 
 -> Error notification appears
+Bugs:
+1. Here is the error: "Error contacting cluster. Make sure it`s reachable, document valid, api version supported etc."
+2. remove one letter (or some par of invalid content) and error changed to "Invalid yaml/json"
+3. remove invalid content and file saved as <resource>(1).yml and after repeat steps file name will change to <reource>(2).yml, then (3) etc. But it opens the right file and file can be edited/saved. So the problem is only in the title.
 
 **Error notification disappears when correcting invalid content**
 1. have editor with invalid content
