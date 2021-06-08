@@ -8,6 +8,9 @@
 
 -> editor title is matching pattern <resource-name>@<namespace-name>.yml
 
+Bugs:
+1. no schema for "Projects"
+
 **Editor file will rename file to <resource>@<namespace>(2).yml if name already used**
 1. "Edit..." resource
 1. "Edit..." other resource
@@ -28,6 +31,8 @@
 1. restart IJ
 
 -> editor title is still the same. It was not renamed to <XXXX(1).yml> (was bug at some point)
+Bugs:
+1. after restart no opened editors anymore
 
 **Irrelevant change, no notification**
 1. "Edit..." resource
@@ -134,10 +139,15 @@
 **Error notification appears when pasting invalid content**
 1. "Edit..." resource
 2. paste invalid yaml
+Bugs:
+1. some weird error message
+2. paste invalid yaml -> close editor -> open same resource -> no invalid string (file was not saved)
 
 **Error notification appears on startup**
 1. have editor with invalid content
 2. restart IJ
+Bugs:
+1. after restart file does not contains the invalid string
 
 -> Error notification appears
 
