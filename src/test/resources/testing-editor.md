@@ -3,6 +3,9 @@
 
 -> editor has corresponding schema selected (bottom right combo "Schema:")
 
+Bugs:
+1. no schema for Project
+
 **Editor title is <resource-name>@<namespace-name>.yml**
 1. "Edit..." namespaced resource (ex. Pod)
 
@@ -160,6 +163,9 @@ metadata:
 2. restart IJ
 
 -> Error notification appears
+
+Bugs:
+1. after restart no opened editors anymore
 
 **Details in error notification shows cause**
 1. "Edit..." resource
