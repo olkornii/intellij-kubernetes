@@ -11,7 +11,9 @@
 package org.jboss.tools.intellij.kubernetes;
 
 import com.intellij.remoterobot.RemoteRobot;
+import com.intellij.remoterobot.utils.Keyboard;
 
+import com.intellij.remoterobot.data.TextData;
 import com.intellij.remoterobot.fixtures.ComponentFixture;
 import com.intellij.remoterobot.fixtures.dataExtractor.RemoteText;
 import com.intellij.remoterobot.utils.WaitForConditionTimeoutException;
@@ -23,6 +25,7 @@ import org.jboss.tools.intellij.kubernetes.fixtures.mainIdeWindow.IdeStatusBarFi
 import org.jboss.tools.intellij.kubernetes.fixtures.mainIdeWindow.KubernetesToolsFixture;
 import org.jboss.tools.intellij.kubernetes.fixtures.mainIdeWindow.ToolWindowsPaneFixture;
 import org.jboss.tools.intellij.kubernetes.fixtures.menus.RightClickMenu;
+import org.jboss.tools.intellij.kubernetes.fixtures.popups.EditorNotificationPanelFixture;
 import org.jboss.tools.intellij.kubernetes.utils.GlobalUtils;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -31,7 +34,6 @@ import static com.intellij.remoterobot.search.locators.Locators.byXpath;
 import static com.intellij.remoterobot.stepsProcessing.StepWorkerKt.step;
 import static com.intellij.remoterobot.utils.RepeatUtilsKt.waitFor;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.junit.jupiter.api.Assertions.assertFalse;
 
 import java.time.Duration;
 import java.util.List;
@@ -50,12 +52,12 @@ public class BasicTests {
         GlobalUtils.waitUntilIntelliJStarts(8082);
         robot = GlobalUtils.getRemoteRobotConnection(8082);
         GlobalUtils.clearTheWorkspace(robot);
+        createEpmtyProject();
     }
 
     @Test
     public void checkClusterConnected() {
         step("New Empty Project", () -> {
-            createEpmtyProject();
             final ToolWindowsPaneFixture toolWindowsPaneFixture = robot.find(ToolWindowsPaneFixture.class);
             waitFor(Duration.ofSeconds(10), Duration.ofSeconds(1), "The 'Kubernetes' stripe button is not available.", () -> isStripeButtonAvailable(toolWindowsPaneFixture, "Kubernetes"));
             toolWindowsPaneFixture.stripeButton("Kubernetes").click();
@@ -63,7 +65,7 @@ public class BasicTests {
             final ComponentFixture kubernetesViewTree = kubernetesToolsFixture.getKubernetesViewTree();
             waitFor(Duration.ofSeconds(15), Duration.ofSeconds(1), "Kubernetes Tree View is not available.", () -> isKubernetesViewTreeAvailable(kubernetesViewTree));
             String clusterText = kubernetesViewTree.findAllText().get(0).getText();
-            assertTrue(clusterText.contains("minikube")); // change to "minikube" after testing
+            assertTrue(clusterText.contains("default")); // change to "minikube" after testing
 
 //            List<RemoteText> all_text_2 = kubernetesToolsFixture.getKubernetesViewTree().findAllText();
 //            System.out.println("2-nd ====================================================================");
@@ -108,11 +110,106 @@ public class BasicTests {
             String editorTitle = selectedResource.getText() + ".yml";
             waitFor(Duration.ofSeconds(15), Duration.ofSeconds(1), "Editor is not available.", () -> isEditorOpened(editorTitle));
             waitFor(Duration.ofSeconds(15), Duration.ofSeconds(1), "Resource schema is wrong.", () -> isSchemaSet("v1#Node"));
-//            ComponentFixture editorTextFixture = editorSplitter.getEditorTextFixture(editorTitle);
-//            List<RemoteText> editor_text = editorTextFixture.findAllText();
-//            for (RemoteText my_element : editor_text){
-//                System.out.println(my_element.getText());
+
+            editorSplitter.closeEditor(editorTitle);
+            String clusterText = kubernetesViewTree.findAllText().get(0).getText();
+            kubernetesViewTree.findText(clusterText).doubleClick();
+        });
+    }
+
+    @Test
+    public void editResource() {
+        step("edit Resource", () -> {
+            final KubernetesToolsFixture kubernetesToolsFixture = robot.find(KubernetesToolsFixture.class);
+            final ComponentFixture kubernetesViewTree = kubernetesToolsFixture.getKubernetesViewTree();
+
+            openClusterContent(kubernetesViewTree);
+            kubernetesViewTree.findText("Nodes").doubleClick(MouseButton.LEFT_BUTTON);
+            waitFor(Duration.ofSeconds(15), Duration.ofSeconds(1), "Nodes is not available.", () -> isNodesLoaded(kubernetesViewTree));
+
+            int resourceId = getResourceByIdInParent("Nodes", 0, kubernetesViewTree);
+            RemoteText selectedResource = kubernetesViewTree.findAllText().get(resourceId);
+            selectedResource.doubleClick();
+
+            EditorsSplittersFixture editorSplitter = robot.find(EditorsSplittersFixture.class);
+            String editorTitle = selectedResource.getText() + ".yml";
+
+            ComponentFixture textFixture = editorSplitter.getEditorTextFixture(editorTitle);
+            List<RemoteText> remote_text = textFixture.findAllText();
+            int labelsId = 0;
+            for (RemoteText actual_remote_text : remote_text){
+                if ("labels".equals(actual_remote_text.getText())){
+                    break;
+                }
+                labelsId++;
+            }
+            RemoteText place_for_print = remote_text.get(labelsId+2);
+            place_for_print.click();
+            Keyboard my_keyboard = new Keyboard(robot);
+            my_keyboard.enterText("    some_label: \"some_label\"");
+            my_keyboard.enter();
+            my_keyboard.backspace();
+
+            EditorNotificationPanelFixture notificationPanel = robot.find(EditorNotificationPanelFixture.class);
+            notificationPanel.PushToCluster();
+
+            editorSplitter.closeEditor(editorTitle);
+            String clusterText = kubernetesViewTree.findAllText().get(0).getText();
+            kubernetesViewTree.findText(clusterText).doubleClick();
+
+            openClusterContent(kubernetesViewTree);
+            kubernetesViewTree.findText("Nodes").doubleClick(MouseButton.LEFT_BUTTON);
+            waitFor(Duration.ofSeconds(15), Duration.ofSeconds(1), "Nodes is not available.", () -> isNodesLoaded(kubernetesViewTree));
+            selectedResource.doubleClick();
+            ComponentFixture textFixtureNew = editorSplitter.getEditorTextFixture(editorTitle);
+            List<RemoteText> remoteTextNew = textFixtureNew.findAllText();
+            boolean labelExist = false;
+            for (RemoteText actual_remote_text : remoteTextNew){
+                if (actual_remote_text.getText().contains("some_label")){
+                    labelExist = true;
+                    break;
+                }
+            }
+
+            editorSplitter.closeEditor(editorTitle);
+            kubernetesViewTree.findText(clusterText).doubleClick();
+
+            assertTrue(labelExist);
+        });
+    }
+
+//    @Test
+    public void createNewResourceFromAnother() {
+        step("create new resource from another", () -> {
+            try {
+                Thread.sleep(5000);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+            final KubernetesToolsFixture kubernetesToolsFixture = robot.find(KubernetesToolsFixture.class);
+            final ComponentFixture kubernetesViewTree = kubernetesToolsFixture.getKubernetesViewTree();
+
+            openClusterContent(kubernetesViewTree);
+            kubernetesViewTree.findText("Nodes").doubleClick(MouseButton.LEFT_BUTTON);
+            waitFor(Duration.ofSeconds(15), Duration.ofSeconds(1), "Nodes is not available.", () -> isNodesLoaded(kubernetesViewTree));
+
+            int resourceId = getResourceByIdInParent("Nodes", 0, kubernetesViewTree);
+            RemoteText selectedResource = kubernetesViewTree.findAllText().get(resourceId);
+            selectedResource.doubleClick();
+
+            EditorsSplittersFixture editorSplitter = robot.find(EditorsSplittersFixture.class);
+            String editorTitle = selectedResource.getText() + ".yml";
+
+            ComponentFixture textFixture = editorSplitter.getEditorTextFixture(editorTitle);
+            List<TextData> data = textFixture.extractData();
+            System.out.println(data);
+//            List<RemoteText> remote_text = textFixture.findAllText();
+//            String text = "";
+//            for (RemoteText actual_remote_text : remote_text){
+//                text = actual_remote_text.getText();
+//                System.out.println(text);
 //            }
+
         });
     }
 

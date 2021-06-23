@@ -8,7 +8,7 @@
  * Contributors:
  * Red Hat, Inc. - initial API and implementation
  ******************************************************************************/
-package org.jboss.tools.intellij.kubernetes.fixtures.mainIdeWindow;
+package org.jboss.tools.intellij.kubernetes.fixtures.popups;
 
 import com.intellij.remoterobot.RemoteRobot;
 import com.intellij.remoterobot.data.RemoteComponent;
@@ -16,29 +16,25 @@ import com.intellij.remoterobot.fixtures.CommonContainerFixture;
 import com.intellij.remoterobot.fixtures.ComponentFixture;
 import com.intellij.remoterobot.fixtures.DefaultXpath;
 import com.intellij.remoterobot.fixtures.FixtureName;
-import com.intellij.remoterobot.fixtures.dataExtractor.RemoteText;
 import org.jetbrains.annotations.NotNull;
-
-import java.util.List;
 
 import static com.intellij.remoterobot.search.locators.Locators.byXpath;
 
 /**
  * @author olkornii@redhat.com
  */
-@DefaultXpath(by = "EditorsSplitters type", xpath = "//div[@class='EditorsSplitters']")
-@FixtureName(name = "Editors Splitters")
-public class EditorsSplittersFixture extends CommonContainerFixture {
-    public EditorsSplittersFixture(@NotNull RemoteRobot remoteRobot, @NotNull RemoteComponent remoteComponent) {
+@DefaultXpath(by = "EditorNotificationPanel type", xpath = "//div[@class='EditorNotificationPanel']")
+@FixtureName(name = "Editor Notification Panel")
+public class EditorNotificationPanelFixture extends CommonContainerFixture {
+    public EditorNotificationPanelFixture(@NotNull RemoteRobot remoteRobot, @NotNull RemoteComponent remoteComponent) {
         super(remoteRobot, remoteComponent);
     }
 
-    public ComponentFixture getEditorTextFixture(String editorTitle){
-        return find(ComponentFixture.class, byXpath("//div[@accessiblename='Editor for " + editorTitle + "' and @class='EditorComponentImpl']"));
+    public void PushToCluster(){
+        find(ComponentFixture.class, byXpath("//div[@accessiblename='Push to Cluster' and @class='ActionHyperlinkLabel']")).click();
     }
 
-    public void closeEditor(String editorTitle){
-        SingleHeighLabelFixture myLabel = find(SingleHeighLabelFixture.class, byXpath("//div[@accessiblename='" + editorTitle + "' and @class='SingleHeightLabel']"));
-        myLabel.close();
+    public void Ignore(){
+        find(ComponentFixture.class, byXpath("//div[@accessiblename='Ignore' and @class='ActionHyperlinkLabel']")).click();
     }
 }

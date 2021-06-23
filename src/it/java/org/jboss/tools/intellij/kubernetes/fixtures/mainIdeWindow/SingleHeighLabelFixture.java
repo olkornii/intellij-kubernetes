@@ -16,29 +16,22 @@ import com.intellij.remoterobot.fixtures.CommonContainerFixture;
 import com.intellij.remoterobot.fixtures.ComponentFixture;
 import com.intellij.remoterobot.fixtures.DefaultXpath;
 import com.intellij.remoterobot.fixtures.FixtureName;
-import com.intellij.remoterobot.fixtures.dataExtractor.RemoteText;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.List;
-
 import static com.intellij.remoterobot.search.locators.Locators.byXpath;
+
 
 /**
  * @author olkornii@redhat.com
  */
-@DefaultXpath(by = "EditorsSplitters type", xpath = "//div[@class='EditorsSplitters']")
-@FixtureName(name = "Editors Splitters")
-public class EditorsSplittersFixture extends CommonContainerFixture {
-    public EditorsSplittersFixture(@NotNull RemoteRobot remoteRobot, @NotNull RemoteComponent remoteComponent) {
+@DefaultXpath(by = "SingleHeightLabel type", xpath = "//div[@class='SingleHeightLabel']")
+@FixtureName(name = "Single Height Label")
+public class SingleHeighLabelFixture extends CommonContainerFixture {
+    public SingleHeighLabelFixture(@NotNull RemoteRobot remoteRobot, @NotNull RemoteComponent remoteComponent) {
         super(remoteRobot, remoteComponent);
     }
 
-    public ComponentFixture getEditorTextFixture(String editorTitle){
-        return find(ComponentFixture.class, byXpath("//div[@accessiblename='Editor for " + editorTitle + "' and @class='EditorComponentImpl']"));
-    }
-
-    public void closeEditor(String editorTitle){
-        SingleHeighLabelFixture myLabel = find(SingleHeighLabelFixture.class, byXpath("//div[@accessiblename='" + editorTitle + "' and @class='SingleHeightLabel']"));
-        myLabel.close();
+    public void close(){
+        find(ComponentFixture.class, byXpath("//div[@accessiblename='Close. Alt-Click to Close Others' and @class='InplaceButton']")).click();
     }
 }
