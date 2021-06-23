@@ -65,7 +65,7 @@ public class BasicTests {
             final ComponentFixture kubernetesViewTree = kubernetesToolsFixture.getKubernetesViewTree();
             waitFor(Duration.ofSeconds(15), Duration.ofSeconds(1), "Kubernetes Tree View is not available.", () -> isKubernetesViewTreeAvailable(kubernetesViewTree));
             String clusterText = kubernetesViewTree.findAllText().get(0).getText();
-            assertTrue(clusterText.contains("default")); // change to "minikube" after testing
+            assertTrue(clusterText.contains("minikube")); // change to "minikube" after testing
 
 //            List<RemoteText> all_text_2 = kubernetesToolsFixture.getKubernetesViewTree().findAllText();
 //            System.out.println("2-nd ====================================================================");
