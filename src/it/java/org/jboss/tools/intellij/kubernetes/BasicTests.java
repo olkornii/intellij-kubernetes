@@ -13,7 +13,6 @@ package org.jboss.tools.intellij.kubernetes;
 import com.intellij.remoterobot.RemoteRobot;
 import com.intellij.remoterobot.utils.Keyboard;
 
-import com.intellij.remoterobot.data.TextData;
 import com.intellij.remoterobot.fixtures.ComponentFixture;
 import com.intellij.remoterobot.fixtures.dataExtractor.RemoteText;
 import com.intellij.remoterobot.utils.WaitForConditionTimeoutException;
@@ -24,6 +23,7 @@ import org.jboss.tools.intellij.kubernetes.fixtures.mainIdeWindow.EditorsSplitte
 import org.jboss.tools.intellij.kubernetes.fixtures.mainIdeWindow.IdeStatusBarFixture;
 import org.jboss.tools.intellij.kubernetes.fixtures.mainIdeWindow.KubernetesToolsFixture;
 import org.jboss.tools.intellij.kubernetes.fixtures.mainIdeWindow.ToolWindowsPaneFixture;
+import org.jboss.tools.intellij.kubernetes.fixtures.menus.ActionToolbarMenu;
 import org.jboss.tools.intellij.kubernetes.fixtures.menus.RightClickMenu;
 import org.jboss.tools.intellij.kubernetes.utils.GlobalUtils;
 import org.junit.jupiter.api.BeforeAll;
@@ -56,12 +56,12 @@ public class BasicTests {
         openKubernetesTab();
         KubernetesToolsFixture kubernetesToolsFixture = robot.find(KubernetesToolsFixture.class);
         kubernetesViewTree = kubernetesToolsFixture.getKubernetesViewTree();
+        waitFor(Duration.ofSeconds(15), Duration.ofSeconds(1), "Kubernetes Tree View is not available.", () -> isKubernetesViewTreeAvailable(kubernetesViewTree));
     }
 
     @Test
     public void checkClusterConnected() {
         step("New Empty Project", () -> {
-            waitFor(Duration.ofSeconds(15), Duration.ofSeconds(1), "Kubernetes Tree View is not available.", () -> isKubernetesViewTreeAvailable(kubernetesViewTree));
             String clusterText = kubernetesViewTree.findAllText().get(0).getText();
             assertTrue(clusterText.contains("minikube"));
         });
@@ -87,6 +87,63 @@ public class BasicTests {
             editorSplitter.closeEditor(editorTitle); // close editor
             String clusterText = kubernetesViewTree.findAllText().get(0).getText();
             kubernetesViewTree.findText(clusterText).doubleClick(); // hide cluster content
+        });
+    }
+
+    @Test
+    public void editResource() {
+        step("edit Resource", () -> {
+            openClusterContent(kubernetesViewTree);
+            kubernetesViewTree.findText("Nodes").doubleClick(MouseButton.LEFT_BUTTON); // open Nodes content
+            waitFor(Duration.ofSeconds(15), Duration.ofSeconds(1), "Nodes is not available.", () -> isNodesLoaded(kubernetesViewTree)); // wait 15 seconds for Nodes load
+
+            RemoteText selectedResource = getResourceByIdInParent("Nodes", 0, kubernetesViewTree);
+            selectedResource.doubleClick();
+
+            EditorsSplittersFixture editorSplitter = robot.find(EditorsSplittersFixture.class);
+            String editorTitle = selectedResource.getText() + ".yml";
+
+            ComponentFixture textFixture = editorSplitter.getEditorTextFixture(editorTitle);
+            List<RemoteText> remote_text = textFixture.findAllText();
+            int labelsId = 0;
+            for (RemoteText actual_remote_text : remote_text){
+                if ("labels".equals(actual_remote_text.getText())){
+                    break;
+                }
+                labelsId++;
+            }
+            RemoteText placeForNewLabel = remote_text.get(labelsId+2); // +1 because we need the next one, +1 because between every 2 real elements is space
+            placeForNewLabel.click(); // set the cursor
+            Keyboard my_keyboard = new Keyboard(robot);
+            my_keyboard.enterText("    some_label: \"some_label\"");
+            my_keyboard.enter();
+            my_keyboard.backspace();
+
+            ActionToolbarMenu toolbarMenu = robot.find(ActionToolbarMenu.class);
+            toolbarMenu.PushToCluster();
+
+            editorSplitter.closeEditor(editorTitle);
+            String clusterText = kubernetesViewTree.findAllText().get(0).getText();
+            kubernetesViewTree.findText(clusterText).doubleClick(); // hide cluster content
+
+            openClusterContent(kubernetesViewTree); // open again and check that changes are saved
+            kubernetesViewTree.findText("Nodes").doubleClick(MouseButton.LEFT_BUTTON);
+            waitFor(Duration.ofSeconds(15), Duration.ofSeconds(1), "Nodes is not available.", () -> isNodesLoaded(kubernetesViewTree));
+            selectedResource.doubleClick();
+            ComponentFixture textFixtureNew = editorSplitter.getEditorTextFixture(editorTitle);
+            List<RemoteText> remoteTextNew = textFixtureNew.findAllText();
+            boolean labelExist = false;
+            for (RemoteText actual_remote_text : remoteTextNew){
+                if (actual_remote_text.getText().contains("some_label")){
+                    labelExist = true;
+                    break;
+                }
+            }
+
+            editorSplitter.closeEditor(editorTitle); // close editor
+            kubernetesViewTree.findText(clusterText).doubleClick(); // hide cluster content
+
+            assertTrue(labelExist);
         });
     }
 
@@ -168,10 +225,7 @@ public class BasicTests {
     private static boolean isKubernetesViewTreeAvailable(ComponentFixture kubernetesViewTree){
         List<RemoteText> allText = kubernetesViewTree.findAllText();
         String firstText = allText.get(0).getText();
-        if("Nothing to show".equals(firstText)){
-            return false;
-        }
-        return true;
+        return !"Nothing to show".equals(firstText);
     }
 
     private static boolean isNodesOpened(ComponentFixture kubernetesViewTree){
