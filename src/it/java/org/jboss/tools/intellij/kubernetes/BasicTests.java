@@ -119,12 +119,6 @@ public class BasicTests {
             my_keyboard.enter();
             my_keyboard.backspace();
 
-            ComponentFixture textFixture_test = editorSplitter.getEditorTextFixture(editorTitle);
-            List<RemoteText> remote_text_test = textFixture_test.findAllText();
-            for (RemoteText actual_remote_text_test : remote_text_test){
-                System.out.println(actual_remote_text_test.getText());
-            }
-
             ActionToolbarMenu toolbarMenu = robot.find(ActionToolbarMenu.class);
             toolbarMenu.PushToCluster();
 

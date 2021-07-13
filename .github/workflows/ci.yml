@@ -41,7 +41,7 @@ jobs:
         export DISPLAY=:99.0
         Xvfb -ac :99 -screen 0 1920x1080x16 &
         ./gradlew runIdeForUiTests -PideaVersion=IC-2020.2 &
-        ./gradlew integrationTest --debug
+        ./gradlew integrationTest
     - uses: actions/upload-artifact@v1
       with:
         name: ${{ runner.os }}-integration-test-reports
