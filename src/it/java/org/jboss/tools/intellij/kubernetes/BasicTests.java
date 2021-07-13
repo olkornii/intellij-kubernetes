@@ -52,7 +52,7 @@ public class BasicTests {
         GlobalUtils.waitUntilIntelliJStarts(8082);
         robot = GlobalUtils.getRemoteRobotConnection(8082);
         GlobalUtils.clearTheWorkspace(robot);
-        createEpmtyProject();
+        createEmptyProject();
         openKubernetesTab();
         KubernetesToolsFixture kubernetesToolsFixture = robot.find(KubernetesToolsFixture.class);
         kubernetesViewTree = kubernetesToolsFixture.getKubernetesViewTree();
@@ -81,7 +81,7 @@ public class BasicTests {
 
             EditorsSplittersFixture editorSplitter = robot.find(EditorsSplittersFixture.class);
             String editorTitle = selectedResource.getText() + ".yml";
-            waitFor(Duration.ofSeconds(15), Duration.ofSeconds(1), "Editor is not available.", () -> isEditorOpened(editorTitle)); // wait 15 secods for editor
+            waitFor(Duration.ofSeconds(15), Duration.ofSeconds(1), "Editor is not available.", () -> isEditorOpened(editorTitle)); // wait 15 seconds for editor
             waitFor(Duration.ofSeconds(15), Duration.ofSeconds(1), "Resource schema is wrong.", () -> isSchemaSet("v1#Node")); // wait 15 seconds for set right schema
 
             editorSplitter.closeEditor(editorTitle); // close editor
@@ -118,6 +118,12 @@ public class BasicTests {
             my_keyboard.enterText("    some_label: \"some_label\"");
             my_keyboard.enter();
             my_keyboard.backspace();
+
+            ComponentFixture textFixture_test = editorSplitter.getEditorTextFixture(editorTitle);
+            List<RemoteText> remote_text_test = textFixture_test.findAllText();
+            for (RemoteText actual_remote_text_test : remote_text_test){
+                System.out.println(actual_remote_text_test.getText());
+            }
 
             ActionToolbarMenu toolbarMenu = robot.find(ActionToolbarMenu.class);
             toolbarMenu.PushToCluster();
@@ -185,7 +191,7 @@ public class BasicTests {
         waitFor(Duration.ofSeconds(15), Duration.ofSeconds(1), "Kubernetes Tree View is not available.", () -> isNodesOpened(kubernetesViewTree));
     }
 
-    private static void createEpmtyProject(){
+    private static void createEmptyProject(){
         final WelcomeFrameDialogFixture welcomeFrameDialogFixture = robot.find(WelcomeFrameDialogFixture.class);
         welcomeFrameDialogFixture.createNewProjectLink().click();
         final NewProjectDialogFixture newProjectDialogFixture = welcomeFrameDialogFixture.find(NewProjectDialogFixture.class, Duration.ofSeconds(20));
