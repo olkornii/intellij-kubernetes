@@ -47,6 +47,7 @@ public class BasicTests {
 
     private static RemoteRobot robot;
     private static ComponentFixture kubernetesViewTree;
+    private static final String newClusterName = "newclustername";
 
     @BeforeAll
     public static void connect() throws InterruptedException {
@@ -71,9 +72,7 @@ public class BasicTests {
     @Test
     public void openResourceEditor() {
         step("open Resource Editor", () -> {
-            openClusterContent();
-            kubernetesViewTree.findText("Nodes").doubleClick(MouseButton.LEFT_BUTTON); // open Nodes content
-            waitFor(Duration.ofSeconds(15), Duration.ofSeconds(1), "Nodes is not available.", BasicTests::isNodesLoaded);
+            openNodesList();
 
             RemoteText selectedResource = getResourceByIdInParent("Nodes", 0); // get the resource with id 0
             selectedResource.click(MouseButton.RIGHT_BUTTON); // select the resource
@@ -86,17 +85,14 @@ public class BasicTests {
             waitFor(Duration.ofSeconds(15), Duration.ofSeconds(1), "Resource schema is wrong.", () -> isSchemaSet("v1#Node")); // wait 15 seconds for set right schema
 
             editorSplitter.closeEditor(editorTitle); // close editor
-            String clusterText = kubernetesViewTree.findAllText().get(0).getText();
-            kubernetesViewTree.findText(clusterText).doubleClick(); // hide cluster content
+            hideClusterContent();
         });
     }
 
     @Test
     public void editResource() {
         step("edit Resource", () -> {
-            openClusterContent();
-            kubernetesViewTree.findText("Nodes").doubleClick(MouseButton.LEFT_BUTTON); // open Nodes content
-            waitFor(Duration.ofSeconds(15), Duration.ofSeconds(1), "Nodes is not available.", BasicTests::isNodesLoaded); // wait 15 seconds for Nodes load
+            openNodesList();
 
             RemoteText selectedResource = getResourceByIdInParent("Nodes", 0);
             selectedResource.doubleClick();
@@ -124,12 +120,10 @@ public class BasicTests {
             toolbarMenu.PushToCluster();
 
             editorSplitter.closeEditor(editorTitle);
-            String clusterText = kubernetesViewTree.findAllText().get(0).getText();
-            kubernetesViewTree.findText(clusterText).doubleClick(); // hide cluster content
+            hideClusterContent();
 
-            openClusterContent(); // open again and check that changes are saved
-            kubernetesViewTree.findText("Nodes").doubleClick(MouseButton.LEFT_BUTTON);
-            waitFor(Duration.ofSeconds(15), Duration.ofSeconds(1), "Nodes is not available.", BasicTests::isNodesLoaded);
+            openNodesList();
+
             selectedResource.doubleClick();
             ComponentFixture textFixtureNew = editorSplitter.getEditorTextFixture(editorTitle);
             List<RemoteText> remoteTextNew = textFixtureNew.findAllText();
@@ -142,7 +136,7 @@ public class BasicTests {
             }
 
             editorSplitter.closeEditor(editorTitle); // close editor
-            kubernetesViewTree.findText(clusterText).doubleClick(); // hide cluster content
+            hideClusterContent();
 
             assertTrue(labelExist);
         });
@@ -150,10 +144,8 @@ public class BasicTests {
 
     @Test
     public void createResourceByEdit() {
-        step("edit Resource", () -> {
-            openClusterContent();
-            kubernetesViewTree.findText("Nodes").doubleClick(MouseButton.LEFT_BUTTON); // open Nodes content
-            waitFor(Duration.ofSeconds(15), Duration.ofSeconds(1), "Nodes is not available.", BasicTests::isNodesLoaded); // wait 15 seconds for Nodes load
+        step("create Resource", () -> {
+            openNodesList();
 
             RemoteText selectedResource = getResourceByIdInParent("Nodes", 0);
             selectedResource.doubleClick();
@@ -161,7 +153,6 @@ public class BasicTests {
             EditorsSplittersFixture editorSplitter = robot.find(EditorsSplittersFixture.class);
             String editorTitle = selectedResource.getText() + ".yml";
             Keyboard myKeyboard = new Keyboard(robot);
-            String newClusterName = "newclustername";
             String newEditorTitle = newClusterName + ".yml";
 
             findResourceNamePosition(editorSplitter, editorTitle, myKeyboard);
@@ -175,8 +166,20 @@ public class BasicTests {
             waitFor(Duration.ofSeconds(15), Duration.ofSeconds(1), "New cluster was not been created.", () -> isClusterCreated(newClusterName)); // wait 15 seconds for Nodes load
 
             editorSplitter.closeEditor(newEditorTitle); // close editor
-            String clusterText = kubernetesViewTree.findAllText().get(0).getText();
-            kubernetesViewTree.findText(clusterText).doubleClick(); // hide cluster content
+            hideClusterContent();
+        });
+
+        step("delete Resource", () -> {
+            openNodesList();
+
+            kubernetesViewTree.findText(newClusterName).click(MouseButton.RIGHT_BUTTON);
+            RightClickMenu rightClickMenu = robot.find(RightClickMenu.class);
+            rightClickMenu.select("Delete"); // delete the resource
+
+            waitFor(Duration.ofSeconds(15), Duration.ofSeconds(1), "Delete dialog did not appear.", BasicTests::acceptDeleteDialog);
+            waitFor(Duration.ofSeconds(15), Duration.ofSeconds(1), "New cluster was not been deleted.", () -> isClusterDeleted(newClusterName));
+
+            hideClusterContent();
         });
     }
 
@@ -201,16 +204,33 @@ public class BasicTests {
         namePlace.doubleClick(); // set the cursor
     }
 
+    private static boolean acceptDeleteDialog(){
+        try {
+            robot.find(ComponentFixture.class, byXpath("//div[@text='Yes']")).click();
+            return true;
+        } catch (WaitForConditionTimeoutException e) {
+            return false;
+        }
+    }
+
     private static boolean isClusterCreated(String clusterName){
         List<RemoteText> kubernetesToolsText = kubernetesViewTree.findAllText();
-        boolean newClusterExists = false;
         for (RemoteText findNewCluster : kubernetesToolsText){
             if (clusterName.equals(findNewCluster.getText())){
-                newClusterExists = true;
-                break;
+                return true;
             }
         }
-        return newClusterExists;
+        return false;
+    }
+
+    private static boolean isClusterDeleted(String clusterName){
+        List<RemoteText> kubernetesToolsText = kubernetesViewTree.findAllText();
+        for (RemoteText findNewCluster : kubernetesToolsText){
+            if (clusterName.equals(findNewCluster.getText())){
+                return false;
+            }
+        }
+        return true;
     }
 
     private static boolean isSchemaSet(String schemaName){
@@ -312,5 +332,16 @@ public class BasicTests {
             }
         }
         return true;
+    }
+
+    private static void openNodesList(){
+        openClusterContent();
+        kubernetesViewTree.findText("Nodes").doubleClick(MouseButton.LEFT_BUTTON); // open Nodes content
+        waitFor(Duration.ofSeconds(15), Duration.ofSeconds(1), "Nodes is not available.", BasicTests::isNodesLoaded);
+    }
+
+    private static void hideClusterContent(){
+        String clusterText = kubernetesViewTree.findAllText().get(0).getText();
+        kubernetesViewTree.findText(clusterText).doubleClick(); // hide cluster content
     }
 }
