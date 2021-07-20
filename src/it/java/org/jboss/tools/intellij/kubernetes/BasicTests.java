@@ -34,6 +34,7 @@ import static com.intellij.remoterobot.stepsProcessing.StepWorkerKt.step;
 import static com.intellij.remoterobot.utils.RepeatUtilsKt.waitFor;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.awt.event.KeyEvent;
 import java.time.Duration;
 import java.util.List;
 
@@ -56,7 +57,7 @@ public class BasicTests {
         openKubernetesTab();
         KubernetesToolsFixture kubernetesToolsFixture = robot.find(KubernetesToolsFixture.class);
         kubernetesViewTree = kubernetesToolsFixture.getKubernetesViewTree();
-        waitFor(Duration.ofSeconds(15), Duration.ofSeconds(1), "Kubernetes Tree View is not available.", () -> isKubernetesViewTreeAvailable(kubernetesViewTree));
+        waitFor(Duration.ofSeconds(15), Duration.ofSeconds(1), "Kubernetes Tree View is not available.", BasicTests::isKubernetesViewTreeAvailable);
     }
 
     @Test
@@ -70,11 +71,11 @@ public class BasicTests {
     @Test
     public void openResourceEditor() {
         step("open Resource Editor", () -> {
-            openClusterContent(kubernetesViewTree);
+            openClusterContent();
             kubernetesViewTree.findText("Nodes").doubleClick(MouseButton.LEFT_BUTTON); // open Nodes content
-            waitFor(Duration.ofSeconds(15), Duration.ofSeconds(1), "Nodes is not available.", () -> isNodesLoaded(kubernetesViewTree));
+            waitFor(Duration.ofSeconds(15), Duration.ofSeconds(1), "Nodes is not available.", BasicTests::isNodesLoaded);
 
-            RemoteText selectedResource = getResourceByIdInParent("Nodes", 0, kubernetesViewTree); // get the resource with id 0
+            RemoteText selectedResource = getResourceByIdInParent("Nodes", 0); // get the resource with id 0
             selectedResource.click(MouseButton.RIGHT_BUTTON); // select the resource
             RightClickMenu rightClickMenu = robot.find(RightClickMenu.class); // open the yml editor
             rightClickMenu.select("Edit..."); // open the yml editor
@@ -93,11 +94,11 @@ public class BasicTests {
     @Test
     public void editResource() {
         step("edit Resource", () -> {
-            openClusterContent(kubernetesViewTree);
+            openClusterContent();
             kubernetesViewTree.findText("Nodes").doubleClick(MouseButton.LEFT_BUTTON); // open Nodes content
-            waitFor(Duration.ofSeconds(15), Duration.ofSeconds(1), "Nodes is not available.", () -> isNodesLoaded(kubernetesViewTree)); // wait 15 seconds for Nodes load
+            waitFor(Duration.ofSeconds(15), Duration.ofSeconds(1), "Nodes is not available.", BasicTests::isNodesLoaded); // wait 15 seconds for Nodes load
 
-            RemoteText selectedResource = getResourceByIdInParent("Nodes", 0, kubernetesViewTree);
+            RemoteText selectedResource = getResourceByIdInParent("Nodes", 0);
             selectedResource.doubleClick();
 
             EditorsSplittersFixture editorSplitter = robot.find(EditorsSplittersFixture.class);
@@ -126,9 +127,9 @@ public class BasicTests {
             String clusterText = kubernetesViewTree.findAllText().get(0).getText();
             kubernetesViewTree.findText(clusterText).doubleClick(); // hide cluster content
 
-            openClusterContent(kubernetesViewTree); // open again and check that changes are saved
+            openClusterContent(); // open again and check that changes are saved
             kubernetesViewTree.findText("Nodes").doubleClick(MouseButton.LEFT_BUTTON);
-            waitFor(Duration.ofSeconds(15), Duration.ofSeconds(1), "Nodes is not available.", () -> isNodesLoaded(kubernetesViewTree));
+            waitFor(Duration.ofSeconds(15), Duration.ofSeconds(1), "Nodes is not available.", BasicTests::isNodesLoaded);
             selectedResource.doubleClick();
             ComponentFixture textFixtureNew = editorSplitter.getEditorTextFixture(editorTitle);
             List<RemoteText> remoteTextNew = textFixtureNew.findAllText();
@@ -147,6 +148,71 @@ public class BasicTests {
         });
     }
 
+    @Test
+    public void createResourceByEdit() {
+        step("edit Resource", () -> {
+            openClusterContent();
+            kubernetesViewTree.findText("Nodes").doubleClick(MouseButton.LEFT_BUTTON); // open Nodes content
+            waitFor(Duration.ofSeconds(15), Duration.ofSeconds(1), "Nodes is not available.", BasicTests::isNodesLoaded); // wait 15 seconds for Nodes load
+
+            RemoteText selectedResource = getResourceByIdInParent("Nodes", 0);
+            selectedResource.doubleClick();
+
+            EditorsSplittersFixture editorSplitter = robot.find(EditorsSplittersFixture.class);
+            String editorTitle = selectedResource.getText() + ".yml";
+            Keyboard myKeyboard = new Keyboard(robot);
+            String newClusterName = "newclustername";
+            String newEditorTitle = newClusterName + ".yml";
+
+            findResourceNamePosition(editorSplitter, editorTitle, myKeyboard);
+
+            myKeyboard.backspace();
+            myKeyboard.enterText("\"" + newClusterName + "\"");
+
+            ActionToolbarMenu toolbarMenu = robot.find(ActionToolbarMenu.class);
+            toolbarMenu.PushToCluster();
+
+            waitFor(Duration.ofSeconds(15), Duration.ofSeconds(1), "New cluster was not been created.", () -> isClusterCreated(newClusterName)); // wait 15 seconds for Nodes load
+
+            editorSplitter.closeEditor(newEditorTitle); // close editor
+            String clusterText = kubernetesViewTree.findAllText().get(0).getText();
+            kubernetesViewTree.findText(clusterText).doubleClick(); // hide cluster content
+        });
+    }
+
+    private static void findResourceNamePosition(EditorsSplittersFixture editorSplitter, String editorTitle, Keyboard myKeyboard){
+        myKeyboard.hotKey(KeyEvent.VK_CONTROL, KeyEvent.VK_F);
+        robot.find(ComponentFixture.class, byXpath("//div[@class='SearchTextArea']")).click();
+        myKeyboard.enterText(" name:");
+
+
+        ComponentFixture textFixture = editorSplitter.getEditorTextFixture(editorTitle);
+        List<RemoteText> remoteText = textFixture.findAllText();
+
+        int nameId = 0;
+        for (RemoteText actual_remote_text : remoteText){
+            if ("name".equals(actual_remote_text.getText())){
+                break;
+            }
+            nameId++;
+        }
+
+        RemoteText namePlace = remoteText.get(nameId+3); // +1 because we need the next one, +1 because between every 2 real elements is space, +1 because here is the ":"
+        namePlace.doubleClick(); // set the cursor
+    }
+
+    private static boolean isClusterCreated(String clusterName){
+        List<RemoteText> kubernetesToolsText = kubernetesViewTree.findAllText();
+        boolean newClusterExists = false;
+        for (RemoteText findNewCluster : kubernetesToolsText){
+            if (clusterName.equals(findNewCluster.getText())){
+                newClusterExists = true;
+                break;
+            }
+        }
+        return newClusterExists;
+    }
+
     private static boolean isSchemaSet(String schemaName){
         try {
             IdeStatusBarFixture statusBarFixture = robot.find(IdeStatusBarFixture.class);
@@ -157,7 +223,7 @@ public class BasicTests {
         return true;
     }
 
-    private static RemoteText getResourceByIdInParent(String parentName, int id, ComponentFixture kubernetesViewTree){
+    private static RemoteText getResourceByIdInParent(String parentName, int id){
         List<RemoteText> kubernetesToolsText = kubernetesViewTree.findAllText();
         int parentId = 0;
         for (RemoteText findParent : kubernetesToolsText){
@@ -169,7 +235,7 @@ public class BasicTests {
         return kubernetesViewTree.findAllText().get(parentId + id + 1);
     }
 
-    private static void openClusterContent(ComponentFixture kubernetesViewTree){
+    private static void openClusterContent(){
         List<RemoteText> kubernetesToolsText = kubernetesViewTree.findAllText();
         boolean needClickOnMinikube = true;
         for (RemoteText findNodes : kubernetesToolsText){
@@ -182,7 +248,7 @@ public class BasicTests {
             String clusterText = kubernetesViewTree.findAllText().get(0).getText();
             kubernetesViewTree.findText(clusterText).doubleClick(MouseButton.LEFT_BUTTON);
         }
-        waitFor(Duration.ofSeconds(15), Duration.ofSeconds(1), "Kubernetes Tree View is not available.", () -> isNodesOpened(kubernetesViewTree));
+        waitFor(Duration.ofSeconds(15), Duration.ofSeconds(1), "Kubernetes Tree View is not available.", BasicTests::isNodesOpened);
     }
 
     private static void createEmptyProject(){
@@ -222,13 +288,13 @@ public class BasicTests {
         return true;
     }
 
-    private static boolean isKubernetesViewTreeAvailable(ComponentFixture kubernetesViewTree){
+    private static boolean isKubernetesViewTreeAvailable(){
         List<RemoteText> allText = kubernetesViewTree.findAllText();
         String firstText = allText.get(0).getText();
         return !"Nothing to show".equals(firstText);
     }
 
-    private static boolean isNodesOpened(ComponentFixture kubernetesViewTree){
+    private static boolean isNodesOpened(){
         List<RemoteText> allTextFromTree = kubernetesViewTree.findAllText();
         for (RemoteText actualText : allTextFromTree){
             if (actualText.getText().contains("Nodes")){
@@ -238,7 +304,7 @@ public class BasicTests {
         return false;
     }
 
-    private static boolean isNodesLoaded(ComponentFixture kubernetesViewTree){
+    private static boolean isNodesLoaded(){
         List<RemoteText> allTextFromTree = kubernetesViewTree.findAllText();
         for (RemoteText actualText : allTextFromTree){
             if (actualText.getText().contains("loading...")){
