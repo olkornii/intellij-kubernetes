@@ -29,7 +29,6 @@ import java.util.List;
 
 import static com.intellij.remoterobot.search.locators.Locators.byXpath;
 import static com.intellij.remoterobot.utils.RepeatUtilsKt.waitFor;
-import static org.junit.jupiter.api.Assertions.assertFalse;
 
 /**
  * @author olkornii@redhat.com
@@ -67,7 +66,6 @@ public class CreateResourceByEditTest extends AbstractKubernetesTest{
     }
 
     public static void deleteResource(RemoteRobot robot, ComponentFixture kubernetesViewTree){
-        clearErrors(robot);
         openResourceContentList(new String[]{"Nodes"}, kubernetesViewTree);
         kubernetesViewTree.findText(newResourceName).click(MouseButton.RIGHT_BUTTON);
         RightClickMenu rightClickMenu = robot.find(RightClickMenu.class);
@@ -76,7 +74,6 @@ public class CreateResourceByEditTest extends AbstractKubernetesTest{
         waitFor(Duration.ofSeconds(15), Duration.ofSeconds(1), "Delete dialog did not appear.", () -> acceptDeleteDialog(robot));
         waitFor(Duration.ofSeconds(15), Duration.ofSeconds(1), "New resource was not been deleted.", () -> isResourceDeleted(kubernetesViewTree, newResourceName));
         hideClusterContent(kubernetesViewTree);
-        assertFalse(isError(robot));
     }
 
     private static RemoteText findResourceNamePosition(RemoteRobot robot, EditorsSplittersFixture editorSplitter, String editorTitle, Keyboard myKeyboard){
