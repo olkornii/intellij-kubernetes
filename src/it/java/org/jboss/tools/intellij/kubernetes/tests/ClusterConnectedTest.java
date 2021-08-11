@@ -21,7 +21,9 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  */
 public class ClusterConnectedTest extends AbstractKubernetesTest{
     public static void checkClusterConnected(RemoteRobot robot, ComponentFixture kubernetesViewTree){
+        clearErrors(robot);
         String clusterText = kubernetesViewTree.findAllText().get(0).getText();
         assertTrue(clusterText.contains("minikube"));
+        assertFalse(isError(robot));
     }
 }

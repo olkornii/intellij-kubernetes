@@ -73,6 +73,11 @@ public class BasicTests {
         step("delete Resource", () -> CreateResourceByEditTest.deleteResource(robot, kubernetesViewTree));
     }
 
+    @Test
+    public void createAnotherResourceTypeByEdit() {
+        step("create another type of Resource", () -> CreateAnotherTypeResourceByEditTest.createAnotherTypeResourceByEdit(robot, kubernetesViewTree));
+    }
+
     private static void createEmptyProject(){
         final WelcomeFrameDialogFixture welcomeFrameDialogFixture = robot.find(WelcomeFrameDialogFixture.class);
         welcomeFrameDialogFixture.createNewProjectLink().click();

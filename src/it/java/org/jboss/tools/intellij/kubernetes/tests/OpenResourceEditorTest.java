@@ -30,6 +30,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
  */
 public class OpenResourceEditorTest extends AbstractKubernetesTest{
     public static void checkResourceEditor(RemoteRobot robot, ComponentFixture kubernetesViewTree){
+        clearErrors(robot);
         openResourceContentList(new String[]{"Nodes"}, kubernetesViewTree);
         RemoteText selectedResource = getResourceByIdInParent("Nodes", 0, kubernetesViewTree); // get the resource with id 0
         selectedResource.click(MouseButton.RIGHT_BUTTON); // select the resource
@@ -43,6 +44,7 @@ public class OpenResourceEditorTest extends AbstractKubernetesTest{
 
         editorSplitter.closeEditor(editorTitle); // close editor
         hideClusterContent(kubernetesViewTree);
+        assertFalse(isError(robot));
     }
 
     private static boolean isEditorOpened(RemoteRobot robot, String editorTitle){
