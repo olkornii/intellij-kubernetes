@@ -27,7 +27,6 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  */
 public class EditResourceTest extends AbstractKubernetesTest{
     public static void editResource(RemoteRobot robot, ComponentFixture kubernetesViewTree){
-        clearErrors(robot);
         openResourceContentList(new String[]{"Nodes"}, kubernetesViewTree);
         RemoteText selectedResource = getResourceByIdInParent("Nodes", 0, kubernetesViewTree);
         selectedResource.doubleClick();
@@ -74,6 +73,5 @@ public class EditResourceTest extends AbstractKubernetesTest{
         hideClusterContent(kubernetesViewTree);
 
         assertTrue(labelExist);
-        assertFalse(isError(robot));
     }
 }

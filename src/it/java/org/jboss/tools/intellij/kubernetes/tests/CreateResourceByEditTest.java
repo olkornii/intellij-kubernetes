@@ -39,7 +39,6 @@ public class CreateResourceByEditTest extends AbstractKubernetesTest{
     private static final String newResourceName = "newresourcename1";
 
     public static void createResourceByEdit(RemoteRobot robot, ComponentFixture kubernetesViewTree){
-        clearErrors(robot);
         openResourceContentList(new String[]{"Nodes"}, kubernetesViewTree);
         RemoteText selectedResource = getResourceByIdInParent("Nodes", 0, kubernetesViewTree);
         selectedResource.doubleClick();
@@ -65,7 +64,6 @@ public class CreateResourceByEditTest extends AbstractKubernetesTest{
 
         editorSplitter.closeEditor(newEditorTitle); // close editor
         hideClusterContent(kubernetesViewTree);
-        assertFalse(isError(robot));
     }
 
     public static void deleteResource(RemoteRobot robot, ComponentFixture kubernetesViewTree){
