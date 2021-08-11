@@ -15,7 +15,9 @@ import com.intellij.remoterobot.fixtures.ComponentFixture;
 import com.intellij.remoterobot.fixtures.dataExtractor.RemoteText;
 import com.intellij.remoterobot.utils.Keyboard;
 import org.assertj.swing.core.MouseButton;
+import org.jboss.tools.intellij.kubernetes.fixtures.dialogs.IdeFatalErrorsDialogFixture;
 import org.jboss.tools.intellij.kubernetes.fixtures.mainIdeWindow.EditorsSplittersFixture;
+import org.jboss.tools.intellij.kubernetes.fixtures.mainIdeWindow.IdeStatusBarFixture;
 import org.jboss.tools.intellij.kubernetes.fixtures.menus.ActionToolbarMenu;
 import org.jboss.tools.intellij.kubernetes.fixtures.menus.RightClickMenu;
 
@@ -58,7 +60,17 @@ public class CreateAnotherTypeResourceByEditTest extends AbstractKubernetesTest{
         waitFor(Duration.ofSeconds(15), Duration.ofSeconds(1), "New resource was not been created.", () -> isResourceCreated(kubernetesViewTree, newResourceName, false));
         hideClusterContent(kubernetesViewTree);
 
-        assertFalse(isError(robot));
+
+        String errorMessage = "";
+        if (isError(robot)){
+            robot.find(IdeStatusBarFixture.class).ideErrorsIcon().click();
+            IdeFatalErrorsDialogFixture ideErrorsDialog = robot.find(IdeFatalErrorsDialogFixture.class);
+            for (RemoteText remoteText: ideErrorsDialog.exceptionDescriptionJTextArea().findAllText()){
+                errorMessage = errorMessage + remoteText.getText();
+            }
+        }
+
+        assertFalse(isError(robot), errorMessage);
     }
 
     private static void setupNewPod(RemoteRobot robot, Keyboard myKeyboard, String editorTitle){
