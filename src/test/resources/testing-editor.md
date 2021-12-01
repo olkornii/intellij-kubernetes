@@ -142,7 +142,7 @@ NOTE:
 -> modified notification appears
 
 NOTE:
- modify resource externally -> editor content updates (no any notifications)
+ modify resource externally -> editor content updates (no any notifications) (**Issue #298**)
 
 **Reload -> Modified notification disappears**
 1. "Edit..." resource
