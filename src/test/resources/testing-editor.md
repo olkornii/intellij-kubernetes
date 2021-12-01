@@ -155,7 +155,7 @@ NOTE:
 -> editor shows new resource, notification disappears
 
 NOTE:
- modify resource externally -> editor content updates (no any notifications)
+ modify resource externally -> editor content updates (no any notifications) (**Issue** #298)
 
 **Error notification appears when pasting invalid content**
 1. "Edit..." resource
