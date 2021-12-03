@@ -196,8 +196,9 @@ metadata:
 -> Error notification appears
 
 NOTE:
- no error notification, I also can edit line with error (change aaaaaaaa line after "metadata" -> aaaaaaaasdasdasfasf) without any notifications -> remove wrong line -> add again -> error notification apears
- error notification apears -> editor title changes from "name" to "name.yml" -> error notification disapears -> title changes to "name" back
+ no error notification, I also can edit line with error (change aaaaaaaa line after "metadata" -> aaaaaaaasdasdasfasf) without any notifications -> remove wrong line -> add again -> error notification apears 
+error notification apears -> editor title changes from "name" to "name.yml" -> error notification disapears -> title changes to "name" back
+([Issue 307](https://github.com/redhat-developer/intellij-kubernetes/issues/307))
 
 **Details in error notification shows cause**
 1. "Edit..." resource
