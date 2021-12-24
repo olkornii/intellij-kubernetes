@@ -36,7 +36,9 @@ import com.redhat.devtools.intellij.kubernetes.model.ModelChangeObservable
 import com.redhat.devtools.intellij.kubernetes.model.ResourceException
 import com.redhat.devtools.intellij.kubernetes.model.createClients
 import com.redhat.devtools.intellij.kubernetes.model.resource.kubernetes.custom.CustomResourceDefinitionMapping
+import com.redhat.devtools.intellij.kubernetes.model.util.LazyInitializedProperty
 import com.redhat.devtools.intellij.kubernetes.model.util.causeOrExceptionMessage
+import com.redhat.devtools.intellij.kubernetes.model.util.isGreaterIntThan
 import com.redhat.devtools.intellij.kubernetes.model.util.trimWithEllipsis
 import io.fabric8.kubernetes.api.model.HasMetadata
 import io.fabric8.kubernetes.api.model.apiextensions.v1.CustomResourceDefinition
@@ -51,7 +53,6 @@ import kotlin.concurrent.withLock
  * A Decorator for [FileEditor] instances that allows to push or pull the editor content to/from a remote cluster.
  */
 open class ResourceEditor(
-    resource: HasMetadata?,
     val editor: FileEditor,
     private val project: Project,
     /* for mocking purposes */
@@ -98,7 +99,9 @@ open class ResourceEditor(
         getKubernetesResourceInfo(getDocument.invoke(editor), getPsiDocumentManager.invoke(project))
     },
     // for mocking purposes
-    private val documentReplaced: AtomicBoolean = AtomicBoolean(false)
+    private val documentChanged: AtomicBoolean = AtomicBoolean(false),
+    // for mocking purposes
+    private val resourceVersion: PersistentEditorValue = PersistentEditorValue(editor)
 ) {
 
     companion object {
@@ -109,43 +112,21 @@ open class ResourceEditor(
         const val TITLE_UNKNOWN_NAME = "unknown name"
     }
 
-    var localCopy: HasMetadata? = resource
-        get() {
-            if (field == null) {
-                field = createResource.invoke(editor, definitions)
-            }
-            return field
-        }
     private val clients: Clients<out KubernetesClient> by lazy {
         createClients.invoke()
     }
 
-    private var definitions: Collection<CustomResourceDefinition>? = null
-        get() {
-            if (field == null) {
-                try {
-                    field = getCustomResourceDefinitions.invoke(clients.get())
-                } catch (e: KubernetesClientException) {
-                    field = null
-                    throw ResourceException(
-                        "Error contacting cluster: could not retrieve custom resource definitions", e
-                    )
-                }
-            }
-            return field
+    private val definitions: Collection<CustomResourceDefinition>? by lazy {
+        try {
+            getCustomResourceDefinitions.invoke(clients.get())
+        } catch (e: KubernetesClientException) {
+            throw ResourceException(
+                "Error contacting cluster: could not retrieve custom resource definitions for server ${clients.get().masterUrl}",
+                e
+            )
         }
+    }
 
-    open var editorResource: HasMetadata? = resource
-        get() {
-            resourceChangeMutex.withLock {
-                return field
-            }
-        }
-        set(resource) {
-            resourceChangeMutex.withLock {
-                field = resource
-            }
-        }
     /** mutex to exclude concurrent execution of push & watch notification **/
     private val resourceChangeMutex = ReentrantLock()
     private var oldClusterResource: ClusterResource? = null
@@ -165,23 +146,34 @@ open class ResourceEditor(
             }
         }
 
+    open var editorResource: HasMetadata? by LazyInitializedProperty {
+        createResource.invoke(editor, definitions)
+    }
+
+    protected open var lastPushedPulled: HasMetadata? by LazyInitializedProperty<HasMetadata?> {
+        if (true == clusterResource?.exists()) {
+            resourceChangeMutex.withLock { editorResource }
+        } else {
+            null
+        }
+    }
+
     /**
      * Updates this editor notifications and title. Does nothing if is called right after [replaceDocument].
      *
      * @see [replaceDocument]
      */
     fun update() {
-        if (documentReplaced.compareAndSet(true, false)) {
-            /*
-             * update triggered by [replaceDocument]
-             */
+        if (documentChanged.compareAndSet(true, false)) {
+            /** update triggered by change in document [replaceDocument] */
             return
         }
         runAsync {
             try {
                 val resource = createResource.invoke(editor, definitions) ?: return@runAsync
-                this.editorResource = resource
                 val cluster = clusterResource ?: return@runAsync
+                resourceChangeMutex.withLock { this.editorResource = resource }
+                saveResourceVersion(resource)
                 showNotifications(resource, cluster)
             } catch (e: ResourceException) {
                 runInUI {
@@ -195,15 +187,24 @@ open class ResourceEditor(
         }
     }
 
+    private fun saveResourceVersion(resource: HasMetadata?) {
+        val version = resource?.metadata?.resourceVersion ?: return
+        val storedVersion = resourceVersion.get()
+        if (!version.isGreaterIntThan(storedVersion)) {
+            // don't get back in version
+            return
+        }
+        resourceVersion.set(version)
+    }
+
     private fun showNotifications(resource: HasMetadata, clusterResource: ClusterResource) {
         when {
-            clusterResource.isDeleted()
-                    && !clusterResource.isModified(resource) ->
+            clusterResource.isDeleted() ->
                 showDeletedNotification(resource)
-            clusterResource.isOutdated(resource) ->
-                showPulledOrPullNotification(resource)
-            clusterResource.canPush(resource) ->
-                showPushNotification(resource)
+            isModified() ->
+                showPushNotification(resourceVersion.get())
+            clusterResource.isOutdated(resourceVersion.get()) ->
+                showPullNotification(resource)
             else ->
                 runInUI {
                     hideNotifications()
@@ -211,9 +212,9 @@ open class ResourceEditor(
         }
     }
 
-    private fun showPushNotification(resource: HasMetadata) {
-        val existsOnCluster = clusterResource?.exists() ?: return
-        val isOutdated = clusterResource?.isOutdated(resource) ?: return
+    private fun showPushNotification(version: String?) {
+        val existsOnCluster = (true == clusterResource?.exists())
+        val isOutdated = (true == clusterResource?.isOutdated(version))
         runInUI {
             // hide & show in the same UI thread runnable avoid flickering
             hideNotifications()
@@ -237,34 +238,24 @@ open class ResourceEditor(
         pulledNotification.hide()
     }
 
-    private fun showPulledOrPullNotification(resourceInEditor: HasMetadata) {
-        val resourceOnCluster = clusterResource?.get(false) ?: return
-        if (!hasLocalChanges()) {
-            resourceChangeMutex.withLock {
-                this.editorResource = resourceInEditor
-                this.localCopy = resourceInEditor
-            }
-            runInUI {
-                replaceDocument(resourceOnCluster)
-                hideNotifications()
-                pulledNotification.show(resourceOnCluster)
-            }
-        } else {
-            runInUI {
-                hideNotifications()
-                pullNotification.show(resourceOnCluster)
-            }
+    private fun showPullNotification(resourceInEditor: HasMetadata) {
+        val clusterResource = this.clusterResource ?: return
+        val resourceOnCluster = clusterResource.pull() ?: return
+        val canPush = clusterResource.canPush(resourceInEditor)
+        runInUI {
+            hideNotifications()
+            pullNotification.show(resourceOnCluster, canPush)
         }
     }
 
     /**
-     * Returns `true` if the resource in the editor is dirty aka has modifications that were not pushed.
+     * Returns `true` if the resource in the editor has changes that were not pushed (yet).
      *
      * @return true if the resource is dirty
      */
-    private fun hasLocalChanges(): Boolean {
+    protected open fun isModified(): Boolean {
         return resourceChangeMutex.withLock {
-            editorResource != this.localCopy
+            editorResource != lastPushedPulled
         }
     }
 
@@ -276,11 +267,12 @@ open class ResourceEditor(
         try {
             val cluster = clusterResource ?: return
             runAsync {
-                val pulledResource = pull(cluster) ?: return@runAsync
+                val pulled = pull(cluster) ?: return@runAsync
+                resourceVersion.set(pulled.metadata.resourceVersion)
                 runInUI {
-                    replaceDocument(pulledResource)
+                    replaceDocument(pulled)
                     hideNotifications()
-                    pulledNotification.show(pulledResource)
+                    pulledNotification.show(pulled)
                 }
             }
         } catch (e: ResourceException) {
@@ -297,13 +289,13 @@ open class ResourceEditor(
 
     private fun pull(cluster: ClusterResource): HasMetadata? {
         return resourceChangeMutex.withLock {
-            val pulled = cluster.get()
+            val pulled = cluster.pull()
             /**
              * set editor resource now,
              * watch change modification notification can get in before document was replaced
              */
             this.editorResource = pulled
-            this.localCopy = pulled
+            this.lastPushedPulled = pulled
             pulled
         }
     }
@@ -317,9 +309,9 @@ open class ResourceEditor(
         if (document.text.trim() != jsonYaml) {
             runWriteCommand {
                 document.replaceString(0, document.textLength, jsonYaml)
-                documentReplaced.set(true)
-                val psiDocumentManager = getPsiDocumentManager.invoke(project)
-                psiDocumentManager.commitDocument(document)
+                documentChanged.set(true)
+                val manager = getPsiDocumentManager.invoke(project)
+                manager.commitDocument(document)
             }
         }
     }
@@ -330,14 +322,13 @@ open class ResourceEditor(
     fun push() {
         runAsync {
             try {
-                val resource = createResource.invoke(editor, definitions) ?: return@runAsync
-                this.editorResource = resource
-                val cluster = clusterResource ?: return@runAsync
-                val updatedResource = push(resource, cluster) ?: return@runAsync
+                resourceChangeMutex.withLock {
+                    val cluster = clusterResource ?: return@runAsync
+                    val resource = editorResource ?: return@runAsync
+                    push(resource, cluster)
+                }
                 runInUI {
                     hideNotifications()
-                    replaceDocument(updatedResource)
-                    pulledNotification.show(updatedResource)
                 }
             } catch (e: ResourceException) {
                 logger<ResourceEditor>().warn(e)
@@ -352,16 +343,15 @@ open class ResourceEditor(
         }
     }
 
-    private fun push(resource: HasMetadata, clusterResource: ClusterResource): HasMetadata? {
-        return resourceChangeMutex.withLock {
-            val updated = clusterResource.push(resource)
-            /*
-             * set editor resource now using lock,
-             * resource watch change modification notification can get in before document was replaced
-             */
-            this.editorResource = updated
-            this.localCopy = updated
-            updated
+    private fun push(resource: HasMetadata, clusterResource: ClusterResource) {
+        val updated = clusterResource.push(resource)
+        saveResourceVersion(updated)
+        /**
+         * set editor resource now,
+         * resource change notification can get in before document was replaced
+         */
+        resourceChangeMutex.withLock {
+            this.lastPushedPulled = resource
         }
     }
 
@@ -391,29 +381,28 @@ open class ResourceEditor(
             }
 
             override fun removed(removed: Any) {
-                showNotifications()
+                runAsync {
+                    update()
+                }
             }
 
             override fun modified(modified: Any) {
-                showNotifications()
-            }
-
-            private fun showNotifications() {
-                val editorResource = this@ResourceEditor.editorResource ?: return
                 runAsync {
-                    showNotifications(editorResource, clusterResource!!)
+                    update()
                 }
             }
         }
     }
 
     /**
-     * Closes this instance. closes the resource watch and deletes the temporary file if one was created.
+     * Closes this instance. Closes the resource watch and deletes the temporary file if one was created.
      */
     fun close() {
         clusterResource?.close()
+        editor.putUserData(KEY_RESOURCE_EDITOR, null)
         editor.file?.putUserData(KEY_RESOURCE_EDITOR, null)
-        createResourceFileForVirtual(editor.file)?.deleteTemporary()
+        createResourceFileForVirtual.invoke(editor.file)?.deleteTemporary()
+        resourceVersion.save()
     }
 
     /**
