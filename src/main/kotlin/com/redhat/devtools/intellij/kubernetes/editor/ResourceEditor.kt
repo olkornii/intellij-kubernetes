@@ -200,10 +200,11 @@ open class ResourceEditor(
             clusterResource.isDeleted()
                     && !clusterResource.isModified(resource) ->
                 showDeletedNotification(resource)
-            clusterResource.isOutdated(resource) ->
-                showPulledOrPullNotification(resource)
-            clusterResource.canPush(resource) ->
+            hasLocalChanges()
+                    && clusterResource.canPush(resource) ->
                 showPushNotification(resource)
+            clusterResource.isOutdated(resource) ->
+                showPullNotification(resource)
             else ->
                 runInUI {
                     hideNotifications()
@@ -237,23 +238,13 @@ open class ResourceEditor(
         pulledNotification.hide()
     }
 
-    private fun showPulledOrPullNotification(resourceInEditor: HasMetadata) {
-        val resourceOnCluster = clusterResource?.get(false) ?: return
-        if (!hasLocalChanges()) {
-            resourceChangeMutex.withLock {
-                this.editorResource = resourceInEditor
-                this.localCopy = resourceInEditor
-            }
-            runInUI {
-                replaceDocument(resourceOnCluster)
-                hideNotifications()
-                pulledNotification.show(resourceOnCluster)
-            }
-        } else {
-            runInUI {
-                hideNotifications()
-                pullNotification.show(resourceOnCluster)
-            }
+    private fun showPullNotification(resourceInEditor: HasMetadata) {
+        val clusterResource = this.clusterResource ?: return
+        val resourceOnCluster = clusterResource.get(false) ?: return
+        val canPush = clusterResource.canPush(resourceInEditor)
+        runInUI {
+            hideNotifications()
+            pullNotification.show(resourceOnCluster, canPush)
         }
     }
 
@@ -336,8 +327,6 @@ open class ResourceEditor(
                 val updatedResource = push(resource, cluster) ?: return@runAsync
                 runInUI {
                     hideNotifications()
-                    replaceDocument(updatedResource)
-                    pulledNotification.show(updatedResource)
                 }
             } catch (e: ResourceException) {
                 logger<ResourceEditor>().warn(e)

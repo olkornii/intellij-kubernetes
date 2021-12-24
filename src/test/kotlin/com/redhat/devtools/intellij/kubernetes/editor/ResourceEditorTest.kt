@@ -333,7 +333,7 @@ spec:
         // when
         editor.update()
         // then
-        verify(pullNotification).show(any())
+        verify(pullNotification).show(any(), canPush)
     }
 
     @Test
@@ -354,7 +354,7 @@ spec:
         // when
         editor.update() // 2nd call: no local changes (editor content was replaced), no modified notification
         // then modification notification only shown once even though #update called twice
-        verify(pullNotification, times(1)).show(any())
+        verify(pullNotification, times(1)).show(any(), canPush)
     }
 
     @Test
@@ -369,7 +369,7 @@ spec:
         // when
         editor.update()
         // then
-        verify(pullNotification, never()).show(any())
+        verify(pullNotification, never()).show(any(), canPush)
     }
 
     @Test
@@ -686,7 +686,7 @@ spec:
         // when
         listener!!.modified(GARGAMEL)
         // then
-        verify(pullNotification).show(GARGAMEL)
+        verify(pullNotification).show(GARGAMEL, canPush)
     }
 
     @Test
@@ -737,7 +737,7 @@ spec:
 
     private fun verifyShowAllNotifications(mode: VerificationMode = times(1)) {
         verify(errorNotification, mode).show(any(), any<String>())
-        verify(pullNotification, mode).show(any())
+        verify(pullNotification, mode).show(any(), canPush)
         verify(deletedNotification, mode).show(any())
         verify(pushNotification, mode).show(any(), any())
         verify(pulledNotification, mode).show(any())
