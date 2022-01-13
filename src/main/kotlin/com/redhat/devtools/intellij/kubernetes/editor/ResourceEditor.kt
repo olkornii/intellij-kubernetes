@@ -249,7 +249,7 @@ open class ResourceEditor(
 
     private fun showPullNotification(resourceInEditor: HasMetadata) {
         val clusterResource = this.clusterResource ?: return
-        val resourceOnCluster = clusterResource.get(false) ?: return
+        val resourceOnCluster = clusterResource.pull() ?: return
         val canPush = clusterResource.canPush(resourceInEditor)
         runInUI {
             hideNotifications()
@@ -297,7 +297,7 @@ open class ResourceEditor(
 
     private fun pull(cluster: ClusterResource): HasMetadata? {
         return resourceChangeMutex.withLock {
-            val pulled = cluster.get()
+            val pulled = cluster.pull()
             /**
              * set editor resource now,
              * watch change modification notification can get in before document was replaced
@@ -353,8 +353,8 @@ open class ResourceEditor(
     private fun push(resource: HasMetadata, clusterResource: ClusterResource): HasMetadata? {
         return resourceChangeMutex.withLock {
             val updated = clusterResource.push(resource)
-            /*
-             * set editor resource now using lock,
+            /**
+             * set editor resource now,
              * resource watch change modification notification can get in before document was replaced
              */
             this.editorResource = updated

@@ -146,7 +146,7 @@ spec:
         }
     private val clusterResource: ClusterResource = mock<ClusterResource>().apply {
         doReturn(GARGAMELv2)
-            .whenever(this).get(any())
+            .whenever(this).pull(any())
     }
     private val createClusterResource: (HasMetadata, Clients<out KubernetesClient>, Collection<CustomResourceDefinition>?) -> ClusterResource =
         mock<(HasMetadata, Clients<out KubernetesClient>, Collection<CustomResourceDefinition>?) -> ClusterResource>().apply {
@@ -327,7 +327,7 @@ spec:
         doReturn(true)
             .whenever(clusterResource).isOutdated(any())
         doReturn(GARGAMEL)
-            .whenever(clusterResource).get(any())
+            .whenever(clusterResource).pull(any())
         doReturn(GARGAMEL_WITH_LABEL) // editor resource is modified
             .whenever(createResource).invoke(any(), any())
         // when
@@ -344,7 +344,7 @@ spec:
         doReturn(true)
             .whenever(clusterResource).isOutdated(any())  // dont show modified notification
         doReturn(AZRAEL) // cluster resource is different -> editor is outdated
-            .whenever(clusterResource).get(any())
+            .whenever(clusterResource).pull(any())
         whenever(createResource.invoke(any(), any()))
             .doReturn(
                 GARGAMELv2, // 1st call to factory in #update: editor is modified -> modified notification, no automatic reload
@@ -363,7 +363,7 @@ spec:
         doReturn(true)
             .whenever(clusterResource).isOutdated(any())
         doReturn(GARGAMEL)
-            .whenever(clusterResource).get(any())
+            .whenever(clusterResource).pull(any())
         doReturn(GARGAMEL)
             .whenever(createResource).invoke(any(), any())
         // when
@@ -378,7 +378,7 @@ spec:
         doReturn(true)
             .whenever(clusterResource).isOutdated(any())
         doReturn(GARGAMEL)
-            .whenever(clusterResource).get(any())
+            .whenever(clusterResource).pull(any())
         doReturn(GARGAMEL)
             .whenever(createResource).invoke(any(), any())
         // when
@@ -393,7 +393,7 @@ spec:
         doReturn(true)
             .whenever(clusterResource).isOutdated(any())
         doReturn(GARGAMEL)
-            .whenever(clusterResource).get(any())
+            .whenever(clusterResource).pull(any())
         doReturn(GARGAMEL)
             .whenever(createResource).invoke(any(), any())
         // when
@@ -419,7 +419,7 @@ spec:
     fun `#update after a #pull should do nothing bcs it was triggered by #replaceDocument (replace triggers editor transaction listener and thus #update)`() {
         // given
         doReturn(GARGAMELv2)
-            .whenever(clusterResource).get(any())
+            .whenever(clusterResource).pull(any())
         editor.pull()
         clearAllNotificationInvocations()
         // when
@@ -432,7 +432,7 @@ spec:
     fun `#pull should replace document`() {
         // given
         doReturn(GARGAMELv2)
-            .whenever(clusterResource).get(any())
+            .whenever(clusterResource).pull(any())
         // when
         editor.pull()
         // then
@@ -469,7 +469,7 @@ spec:
     fun `#pull should show pulled notification`() {
         // given
         doReturn(GARGAMELv2)
-            .whenever(clusterResource).get(any())
+            .whenever(clusterResource).pull(any())
         // when
         editor.pull()
         // then
@@ -618,7 +618,7 @@ spec:
     fun `#replaceContent should set text of document`() {
         // given
         doReturn(GARGAMELv2)
-            .whenever(clusterResource).get(any())
+            .whenever(clusterResource).pull(any())
         // when
         editor.pull()
         // then
@@ -629,7 +629,7 @@ spec:
     fun `#replaceContent should commit document`() {
         // given
         doReturn(GARGAMELv2)
-            .whenever(clusterResource).get(any())
+            .whenever(clusterResource).pull(any())
         // when
         editor.pull()
         // then
@@ -674,7 +674,7 @@ spec:
     fun `IResourceChangeListener#modified should show pull notification if editor is modified`() {
         // given
         doReturn(GARGAMEL) // cluster has GARGAMEL
-            .whenever(clusterResource).get(any())
+            .whenever(clusterResource).pull(any())
         doReturn(false) // dont show deleted notification
             .whenever(clusterResource).isDeleted()
         doReturn(true) // local copy is outdated
@@ -693,7 +693,7 @@ spec:
     fun `IResourceChangeListener#modified should replace document and show pulled notification if editor is NOT modified`() {
         // given
         doReturn(GARGAMELv2)
-            .whenever(clusterResource).get(any())
+            .whenever(clusterResource).pull(any())
         doReturn(false) // dont show deleted notification
             .whenever(clusterResource).isDeleted()
         doReturn(true) // local copy is outdated

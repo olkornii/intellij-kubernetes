@@ -25,7 +25,7 @@ import io.fabric8.kubernetes.client.KubernetesClient
 import io.fabric8.kubernetes.client.KubernetesClientException
 
 /**
- * A resource that exists on the cluster. May be [get], [set] etc.
+ * A resource that exists on the cluster. May be [pull], [set] etc.
  * Notifies listeners of addition, removal and modification if [watch]
  */
 open class ClusterResource(
@@ -60,10 +60,10 @@ open class ClusterResource(
      *
      * @param resource the resource that's the current resource value in this instance
      *
-     * @see [get]
+     * @see [pull]
      * @see [HasMetadata.isSameResource]
      */
-    fun set(resource: HasMetadata?) {
+    protected open fun set(resource: HasMetadata?) {
         synchronized(this) {
             if (resource != null
                 && !initialResource.isSameResource(resource)) {
@@ -82,7 +82,7 @@ open class ClusterResource(
      *
      * @return the resource in the cluster
      */
-    fun get(forceRequest: Boolean = false): HasMetadata? {
+    fun pull(forceRequest: Boolean = false): HasMetadata? {
         synchronized(this) {
             if (forceRequest
                 || updatedResource == null) {
@@ -124,7 +124,7 @@ open class ClusterResource(
             return true
         }
         return try {
-            val resource = get(false)
+            val resource = pull()
             resource == null
                     || (isSameResource(toCompare) && isModified(toCompare))
         } catch (e: ResourceException) {
@@ -146,7 +146,7 @@ open class ClusterResource(
             if (operator == null
                 || !initialResource.isSameResource(resource)) {
                 throw ResourceException(
-                    "unsupported resource kind ${resource.kind} in version ${resource.apiVersion}."
+                    "Unsupported resource kind ${resource.kind} in version ${resource.apiVersion}."
                 )
             }
             val updated =
@@ -188,7 +188,7 @@ open class ClusterResource(
      * @see HasMetadata.isNewerVersionThan
      */
     fun isOutdated(toCompare: HasMetadata?): Boolean {
-        val resource = get(false)
+        val resource = pull()
         return if (toCompare == null) {
             resource != null
         } else {
@@ -217,7 +217,7 @@ open class ClusterResource(
      * @param toCompare resource to compare to the resource on the cluster
      */
     fun isModified(toCompare: HasMetadata?): Boolean {
-        val resource = get(false) ?: return false
+        val resource = pull() ?: return false
         return resource != toCompare
     }
 
@@ -227,7 +227,7 @@ open class ClusterResource(
      * @return true if the resource of this instance exists on the cluster
      */
     fun exists(): Boolean {
-        return get(false) != null
+        return pull() != null
     }
 
     /**
@@ -261,7 +261,7 @@ open class ClusterResource(
 
     private fun forcedUpdate() {
         val beforeUpdate = updatedResource ?: return
-        val updated = get(true)
+        val updated = pull(true)
         when {
             updated == null ->
                 watchListeners.removed(beforeUpdate)

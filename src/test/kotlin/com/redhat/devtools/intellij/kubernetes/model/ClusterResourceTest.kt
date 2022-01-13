@@ -64,73 +64,73 @@ class ClusterResourceTest {
     private val cluster = TestableClusterResource(endorResource, operator, clients, definitions, resourceWatch, observable)
 
     @Test
-    fun `#get(false) should retrieve from cluster if there is no cached value yet`() {
+    fun `#pull(false) should retrieve from cluster if there is no cached value yet`() {
         // given
         assertThat(cluster.updatedResource).isNull()
         // when
-        cluster.get(false)
+        cluster.pull(false)
         // then
         verify(operator).get(any())
     }
 
     @Test
-    fun `#get(false) should NOT retrieve from cluster if there is a cached value`() {
+    fun `#pull(false) should NOT retrieve from cluster if there is a cached value`() {
         // given
         cluster.updatedResource = endorResourceOnCluster
         assertThat(cluster.updatedResource).isNotNull()
         // when
-        cluster.get(false)
+        cluster.pull(false)
         // then
         verify(operator, never()).get(any())
     }
 
     @Test
-    fun `#get(true) should retrieve from cluster if there is a cached value`() {
+    fun `#pull(true) should retrieve from cluster if there is a cached value`() {
         // given
         cluster.updatedResource = endorResourceOnCluster
         assertThat(cluster.updatedResource).isNotNull()
         // when
-        cluster.get(true)
+        cluster.pull(true)
         // then
         verify(operator).get(any())
     }
 
     @Test
-    fun `#get(true) should retrieve from cluster`() {
+    fun `#pull(true) should retrieve from cluster`() {
         // given
         // when
-        cluster.get(true)
+        cluster.pull(true)
         // then
         verify(operator, times(1)).get(any())
     }
 
     @Test
-    fun `#get(true) should return null if cluster returns 404`() {
+    fun `#pull(true) should return null if cluster returns 404`() {
         // given
         whenever(operator.get(any()))
             .doThrow(KubernetesClientException("not found", 404, null))
         // when
-        val retrieved = cluster.get(true)
+        val retrieved = cluster.pull(true)
         // then resource was deleted
         assertThat(retrieved).isNull()
     }
 
     @Test(expected = ResourceException::class)
-    fun `#get(true) should throw if cluster throws exception that is not 404`() {
+    fun `#pull(true) should throw if cluster throws exception that is not 404`() {
         // given
         whenever(operator.get(any()))
             .doThrow(KubernetesClientException("internal error", 500, null))
         // when
-        cluster.get(true)
+        cluster.pull(true)
         // then should have thrown
     }
 
     @Test(expected = ResourceException::class)
-    fun `#get(true) should throw if there is no operator`() {
+    fun `#pull(true) should throw if there is no operator`() {
         // given
         val cluster = TestableClusterResource(endorResource, null, clients, definitions, resourceWatch, observable)
         // when
-        cluster.get(true)
+        cluster.pull(true)
         // then should have thrown
     }
 
@@ -492,7 +492,7 @@ class ClusterResourceTest {
     @Test
     fun `#watch should notify modified if cluster has modified resource`() {
         // given
-        cluster.get() // initialize updatedResource
+        cluster.pull() // initialize updatedResource
         doReturn(modifiedEndorResourceOnCluster) // request returns modified resource
             .whenever(operator).get(any())
         // when
@@ -504,7 +504,7 @@ class ClusterResourceTest {
     @Test
     fun `#watch should notify removed if resource was removed on cluster`() {
         // given
-        val updated = cluster.get() // initialize updatedResource
+        val updated = cluster.pull() // initialize updatedResource
         doReturn(null) // request returns modified resource
             .whenever(operator).get(any())
         // when
@@ -605,5 +605,10 @@ class ClusterResourceTest {
         public override fun setDeleted(deleted: Boolean) {
             super.setDeleted(deleted)
         }
+
+        public override fun set(resource: HasMetadata?) {
+            super.set(resource)
+        }
+
     }
 }
