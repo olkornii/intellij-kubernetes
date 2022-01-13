@@ -14,7 +14,10 @@ import com.intellij.openapi.actionSystem.AnAction
 import com.intellij.openapi.actionSystem.AnActionEvent
 import com.intellij.openapi.actionSystem.CommonDataKeys
 import com.intellij.openapi.progress.Progressive
+import com.intellij.psi.PsiDocumentManager
 import com.redhat.devtools.intellij.kubernetes.editor.ResourceEditorFactory
+import com.redhat.devtools.intellij.kubernetes.editor.util.getDocument
+import com.redhat.devtools.intellij.kubernetes.editor.util.getKubernetesResourceInfo
 import com.redhat.devtools.intellij.kubernetes.editor.util.getSelectedFileEditor
 import com.redhat.devtools.intellij.kubernetes.model.Notification
 import com.redhat.devtools.intellij.kubernetes.telemetry.TelemetryService
@@ -36,7 +39,7 @@ class PullAction: AnAction() {
                 try {
                     val editor = ResourceEditorFactory.instance.getExistingOrCreate(editor, project) ?: return@Progressive
                     editor.pull()
-                    sendTelemetry(editor.localCopy, telemetry)
+                    sendTelemetry(editor.editorResource, telemetry)
                 } catch (e: Exception) {
                     Notification().error("Error Pulling", "Could not pull resource from cluster: ${e.message}")
                     telemetry.error(e).send()

@@ -51,7 +51,6 @@ import kotlin.concurrent.withLock
  * A Decorator for [FileEditor] instances that allows to push or pull the editor content to/from a remote cluster.
  */
 open class ResourceEditor(
-    resource: HasMetadata?,
     val editor: FileEditor,
     private val project: Project,
     /* for mocking purposes */
@@ -109,6 +108,7 @@ open class ResourceEditor(
         const val TITLE_UNKNOWN_NAME = "unknown name"
     }
 
+<<<<<<< HEAD
     var localCopy: HasMetadata? = resource
         get() {
             if (field == null) {
@@ -116,6 +116,8 @@ open class ResourceEditor(
             }
             return field
         }
+=======
+>>>>>>> removed ResourceEditor cstr argument 'resource' bcs not working
     private val clients: Clients<out KubernetesClient> by lazy {
         createClients.invoke()
     }
@@ -128,14 +130,22 @@ open class ResourceEditor(
                 } catch (e: KubernetesClientException) {
                     field = null
                     throw ResourceException(
-                        "Error contacting cluster: could not retrieve custom resource definitions", e
+                        "Error contacting cluster: could not retrieve custom resource definitions for server ${clients.get().masterUrl}", e
                     )
                 }
             }
             return field
         }
 
-    open var editorResource: HasMetadata? = resource
+    private var lastPushedPulled: HasMetadata? = if (true == isTemporary.invoke(editor.file)) {
+        // when editing remote file, resource is pulled
+        createResource.invoke(editor, definitions)
+     } else {
+         // local file, not pulled
+         null
+    }
+
+    open var editorResource: HasMetadata? = lastPushedPulled
         get() {
             resourceChangeMutex.withLock {
                 return field
@@ -146,6 +156,7 @@ open class ResourceEditor(
                 field = resource
             }
         }
+
     /** mutex to exclude concurrent execution of push & watch notification **/
     private val resourceChangeMutex = ReentrantLock()
     private var oldClusterResource: ClusterResource? = null
@@ -172,9 +183,7 @@ open class ResourceEditor(
      */
     fun update() {
         if (documentReplaced.compareAndSet(true, false)) {
-            /*
-             * update triggered by [replaceDocument]
-             */
+            /** update triggered by [replaceDocument] */
             return
         }
         runAsync {
@@ -202,8 +211,8 @@ open class ResourceEditor(
                 showDeletedNotification(resource)
             hasLocalChanges()
                     && clusterResource.canPush(resource) ->
-                showPushNotification(resource)
-            clusterResource.isOutdated(resource) ->
+                showPushNotification(lastPushedPulled)
+            clusterResource.isOutdated(lastPushedPulled) ->
                 showPullNotification(resource)
             else ->
                 runInUI {
@@ -212,7 +221,7 @@ open class ResourceEditor(
         }
     }
 
-    private fun showPushNotification(resource: HasMetadata) {
+    private fun showPushNotification(resource: HasMetadata?) {
         val existsOnCluster = clusterResource?.exists() ?: return
         val isOutdated = clusterResource?.isOutdated(resource) ?: return
         runInUI {
@@ -255,7 +264,7 @@ open class ResourceEditor(
      */
     private fun hasLocalChanges(): Boolean {
         return resourceChangeMutex.withLock {
-            editorResource != this.localCopy
+            editorResource != this.lastPushedPulled
         }
     }
 
@@ -294,7 +303,7 @@ open class ResourceEditor(
              * watch change modification notification can get in before document was replaced
              */
             this.editorResource = pulled
-            this.localCopy = pulled
+            this.lastPushedPulled = pulled
             pulled
         }
     }
@@ -324,7 +333,7 @@ open class ResourceEditor(
                 val resource = createResource.invoke(editor, definitions) ?: return@runAsync
                 this.editorResource = resource
                 val cluster = clusterResource ?: return@runAsync
-                val updatedResource = push(resource, cluster) ?: return@runAsync
+                push(resource, cluster) ?: return@runAsync
                 runInUI {
                     hideNotifications()
                 }
@@ -349,7 +358,7 @@ open class ResourceEditor(
              * resource watch change modification notification can get in before document was replaced
              */
             this.editorResource = updated
-            this.localCopy = updated
+            this.lastPushedPulled = updated
             updated
         }
     }
