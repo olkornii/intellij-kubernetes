@@ -3,17 +3,17 @@
 
 -> editor has corresponding schema selected (bottom right combo "Schema:")
 
-**Editor title is <resource-name>@<namespace-name>**
+**Editor title is [resource-name]@[namespace-name]**
 1. "Edit..." namespaced resource (ex. Pod)
 
 -> editor title is matching pattern <resource-name>@<namespace-name>
 
-**Editor title is <resource-name>**
+**Editor title is [resource-name]**
 1. "Edit..." non namespaced resource (ex. Namespace)
 
 -> editor title is matching pattern <resource-name>
 
-**Editor title is <filename>**
+**Editor title is [filename]**
 1. File > Open & pick local yaml/json file 
 
 -> editor title displays the filename

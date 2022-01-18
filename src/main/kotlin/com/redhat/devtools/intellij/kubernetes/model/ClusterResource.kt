@@ -126,9 +126,9 @@ open class ClusterResource(
         return try {
             val resource = pull()
             resource == null
-                    || (isSameResource(toCompare) && isModified(toCompare))
+                    || (isSameResource(toCompare) && isOutdated(toCompare))
         } catch (e: ResourceException) {
-            logger<ClusterResource>().warn("Could not request resource ${initialResource.metadata.name}", e)
+            logger<ClusterResource>().warn("Could not request resource ${initialResource.metadata.name} from server ${clients.get().masterUrl}", e)
             return false
         }
     }
