@@ -77,6 +77,24 @@ fun getKubernetesResourceInfo(document: Document?, psiDocumentManager: PsiDocume
     }
 }
 
+fun getResourceVersion(document: Document?, manager: PsiDocumentManager): String? {
+    if (document == null) {
+        return null
+    }
+    val file = manager.getPsiFile(document) ?: return null
+    val content = getContent(file) ?: return null
+    val metadata = getMetadata(content) ?: return null
+    return getResourceVersion(metadata)
+}
+
+private fun getResourceVersion(metadata: PsiElement): String? {
+    return when (metadata) {
+        is YAMLKeyValue -> getResourceVersion(metadata)?.value?.text
+        is JsonProperty -> getResourceVersion(metadata)?.value?.text
+        else -> null
+    }
+}
+
 /**
  * Sets or creates the given [resourceVersion] in the given document for the given [PsiDocumentManager] and [Project].
  * The document is **not** committed to allow further modifications before a commit to happen.
@@ -107,9 +125,9 @@ private fun createOrUpdateResourceVersion(resourceVersion: String, metadata: Psi
 
 private fun createOrUpdateResourceVersion(resourceVersion: String, metadata: JsonProperty, project: Project) {
     val metadataObject = metadata.value ?: return
-    val existingVersion = getResourceVersion(metadata)
     val generator = JsonElementGenerator(project)
     val version = generator.createProperty(KEY_RESOURCE_VERSION, "\"$resourceVersion\"")
+    val existingVersion = getResourceVersion(metadata)
     if (existingVersion != null) {
         metadataObject.addAfter(version, existingVersion)
         existingVersion.delete()

@@ -159,7 +159,7 @@ class ClusterResourceTest {
         // given
         val modifiedResource = PodBuilder(endorResourceOnCluster)
                 .editOrNewMetadata()
-                .withNewResourceVersion("resourceVersion-42")
+                .withResourceVersion("resourceVersion-42")
                 .endMetadata()
             .build()
         // when
@@ -173,7 +173,7 @@ class ClusterResourceTest {
         // given
         val differentName = PodBuilder(endorResourceOnCluster)
             .editOrNewMetadata()
-            .withNewName("name-42")
+            .withName("name-42")
             .endMetadata()
             .build()
         // when
@@ -198,7 +198,7 @@ class ClusterResourceTest {
         // given
         val differentNamespace = PodBuilder(endorResource)
             .editOrNewMetadata()
-            .withNewNamespace("namespace-42")
+            .withNamespace("namespace-42")
             .endMetadata()
             .build()
         // when
@@ -349,7 +349,7 @@ class ClusterResourceTest {
     fun `#isOutdated should return true if given null`() {
         // given
         // when
-        val outdated = cluster.isOutdated(null)
+        val outdated = cluster.isOutdated(null as HasMetadata?)
         // then
         assertThat(outdated).isTrue()
     }
@@ -360,7 +360,7 @@ class ClusterResourceTest {
         whenever(operator.get(any()))
             .doReturn(null)
         // when
-        val outdated = cluster.isOutdated(null)
+        val outdated = cluster.isOutdated(null as HasMetadata?)
         // then
         assertThat(outdated).isFalse()
     }
@@ -397,6 +397,78 @@ class ClusterResourceTest {
     }
 
     @Test
+    fun `#isOutdated(String) should return false if cluster has null resource`() {
+        // given
+        val resourceVersion = "42"
+        whenever(operator.get(any()))
+            .doReturn(null)
+        // when
+        val outdated = cluster.isOutdated(resourceVersion)
+        // then
+        assertThat(outdated).isFalse()
+    }
+
+    @Test
+    fun `#isOutdated(String) should return false if resourceVersion is null and cluster has null resource`() {
+        // given
+        val resourceVersion = null
+        whenever(operator.get(any()))
+            .doReturn(null)
+        // when
+        val outdated = cluster.isOutdated(resourceVersion as String?)
+        // then
+        assertThat(outdated).isFalse()
+    }
+
+    @Test
+    fun `#isOutdated(String) should return true if resourceVersion is null and cluster has resource`() {
+        // given
+        val resourceVersion = null
+        whenever(operator.get(any()))
+            .doReturn(endorResourceOnCluster)
+        // when
+        val outdated = cluster.isOutdated(resourceVersion as String?)
+        // then
+        assertThat(outdated).isTrue()
+    }
+
+    @Test
+    fun `#isOutdated(String) should return true if resourceVersion is smaller than cluster resource version`() {
+        // given
+        val resourceVersion = (endorResourceOnCluster.metadata.resourceVersion.toInt() - 1).toString()
+        whenever(operator.get(any()))
+            .doReturn(endorResourceOnCluster)
+        // when
+        val outdated = cluster.isOutdated(resourceVersion as String?)
+        // then
+        assertThat(outdated).isTrue()
+    }
+
+    @Test
+    fun `#isOutdated(String) should return false if resourceVersion is greater than cluster resource version`() {
+        // given
+        val resourceVersion = (endorResourceOnCluster.metadata.resourceVersion.toInt() + 1).toString()
+        whenever(operator.get(any()))
+            .doReturn(endorResourceOnCluster)
+        // when
+        val outdated = cluster.isOutdated(resourceVersion as String?)
+        // then
+        assertThat(outdated).isFalse()
+    }
+
+    @Test
+    fun `#isOutdated(String) should return false if resourceVersion is equal to cluster resource version`() {
+        // given
+        val resourceVersion = endorResourceOnCluster.metadata.resourceVersion
+        whenever(operator.get(any()))
+            .doReturn(endorResourceOnCluster)
+        // when
+        val outdated = cluster.isOutdated(resourceVersion as String?)
+        // then
+        assertThat(outdated).isFalse()
+    }
+
+    @Test
     fun `#isModified should return true if given resource has different kind`() {
         // given
         val modifiedResource = PodBuilder(endorResource)
@@ -425,7 +497,7 @@ class ClusterResourceTest {
         // given
         val modifiedResource = PodBuilder(endorResource)
             .editOrNewMetadata()
-            .withNewNamespace("name-42")
+            .withNamespace("name-42")
             .endMetadata()
             .build()
         // when
@@ -439,7 +511,7 @@ class ClusterResourceTest {
         // given
         val modifiedResource = PodBuilder(endorResource)
             .editOrNewMetadata()
-            .withNewName("name-42")
+            .withName("name-42")
             .endMetadata()
             .build()
         // when

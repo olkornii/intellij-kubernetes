@@ -14,6 +14,7 @@ import com.intellij.openapi.editor.Document
 import com.intellij.openapi.fileEditor.FileEditor
 import com.intellij.openapi.fileEditor.FileEditorManager
 import com.intellij.openapi.project.Project
+import com.intellij.openapi.project.ProjectManager
 import com.intellij.openapi.vfs.VirtualFile
 import com.nhaarman.mockitokotlin2.any
 import com.nhaarman.mockitokotlin2.doReturn
@@ -111,16 +112,17 @@ class ResourceEditorFactoryTest {
             .whenever(this).text
     }
     private val getDocument: (editor: FileEditor) -> Document? = { document }
-    private val reportTelemetry: (FileEditor, Project, TelemetryMessageBuilder.ActionMessage) -> Unit = mock()
     private val hasKubernetesResource: (editor: FileEditor, project: Project) -> Boolean = mock<(editor: FileEditor, project: Project) -> Boolean>().apply {
         doReturn(true)
             .whenever(this).invoke(any(), any())
     }
-    private val createResourceEditor: (HasMetadata?, FileEditor, Project) -> ResourceEditor =
-        { resource, editor, project -> mock() }
+    private val createResourceEditor: (FileEditor, Project) -> ResourceEditor =
+        { editor, project -> mock() }
+    private val reportTelemetry: (FileEditor, Project, TelemetryMessageBuilder.ActionMessage) -> Unit = mock()
+    private val projectManager: ProjectManager = mock()
+    private val getProjectManager: () -> ProjectManager = { projectManager }
 
-    private val resourceEditor: ResourceEditor = spy(ResourceEditor(resource, fileEditor, mock(), mock()))
-
+    private val resourceEditor: ResourceEditor = spy(ResourceEditor(fileEditor, mock(), mock()))
 
     private val editorFactory =
         TestableResourceEditorFactory(
@@ -131,7 +133,8 @@ class ResourceEditorFactoryTest {
             getDocument,
             hasKubernetesResource,
             createResourceEditor,
-            reportTelemetry
+            reportTelemetry,
+            getProjectManager
         )
 
     @Test
@@ -289,8 +292,9 @@ class ResourceEditorFactoryTest {
         isTemporary: (file: VirtualFile?) -> Boolean,
         getDocument: (editor: FileEditor) -> Document?,
         hasKubernetesResource: (FileEditor, Project) -> Boolean,
-        createResourceEditor: (HasMetadata?, FileEditor, Project) -> ResourceEditor,
-        reportTelemetry: (FileEditor, Project, TelemetryMessageBuilder.ActionMessage) -> Unit
+        createResourceEditor: (FileEditor, Project) -> ResourceEditor,
+        reportTelemetry: (FileEditor, Project, TelemetryMessageBuilder.ActionMessage) -> Unit,
+        getProjectManager: () -> ProjectManager
     ) : ResourceEditorFactory(
         getFileEditorManager,
         createResourceFile,
@@ -299,7 +303,8 @@ class ResourceEditorFactoryTest {
         getDocument,
         hasKubernetesResource,
         createResourceEditor,
-        reportTelemetry
+        reportTelemetry,
+        getProjectManager
     ) {
 
         override fun runAsync(runnable: () -> Unit) {

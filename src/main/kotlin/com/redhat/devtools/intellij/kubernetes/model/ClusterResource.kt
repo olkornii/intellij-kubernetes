@@ -16,7 +16,8 @@ import com.redhat.devtools.intellij.kubernetes.model.resource.IResourceOperator
 import com.redhat.devtools.intellij.kubernetes.model.resource.OperatorFactory
 import com.redhat.devtools.intellij.kubernetes.model.resource.ResourceKind
 import com.redhat.devtools.intellij.kubernetes.model.resource.kubernetes.custom.CustomResourceOperatorFactory
-import com.redhat.devtools.intellij.kubernetes.model.util.isNewerVersionThan
+import com.redhat.devtools.intellij.kubernetes.model.util.isGreaterIntThan
+import com.redhat.devtools.intellij.kubernetes.model.util.isOutdated
 import com.redhat.devtools.intellij.kubernetes.model.util.isNotFound
 import com.redhat.devtools.intellij.kubernetes.model.util.isSameResource
 import io.fabric8.kubernetes.api.model.HasMetadata
@@ -126,10 +127,10 @@ open class ClusterResource(
         return try {
             val resource = pull()
             resource == null
-                    || (isSameResource(toCompare) && isOutdated(toCompare))
+                    || (isSameResource(toCompare) && isModified(toCompare))
         } catch (e: ResourceException) {
             logger<ClusterResource>().warn("Could not request resource ${initialResource.metadata.name} from server ${clients.get().masterUrl}", e)
-            return false
+            false
         }
     }
 
@@ -139,7 +140,7 @@ open class ClusterResource(
      * doesn't exist on the cluster, it is replaced if it exists already.
      * Throws a [ResourceException] if the given resource is not the same as the resource initially given to this instance.
      *
-     * @param resource the resource that shall be save to the cluster
+     * @param resource the resource that shall be saved to the cluster
      */
     fun push(resource: HasMetadata): HasMetadata? {
         try {
@@ -185,15 +186,21 @@ open class ClusterResource(
      * @return true if the given resource is outdated compared to the latest cluster resource
      *
      * @see HasMetadata.isSameResource
-     * @see HasMetadata.isNewerVersionThan
+     * @see HasMetadata.isOutdated
      */
     fun isOutdated(toCompare: HasMetadata?): Boolean {
         val resource = pull()
         return if (toCompare == null) {
             resource != null
         } else {
-            true == resource?.isNewerVersionThan(toCompare)
+            true == resource?.isOutdated(toCompare)
         }
+    }
+
+    fun isOutdated(resourceVersion: String?): Boolean {
+        val resource = pull()
+        val clusterVersion = resource?.metadata?.resourceVersion ?: return false
+        return clusterVersion.isGreaterIntThan(resourceVersion)
     }
 
     /**

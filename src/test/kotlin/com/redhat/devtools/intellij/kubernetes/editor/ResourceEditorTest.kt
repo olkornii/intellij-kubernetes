@@ -181,7 +181,6 @@ spec:
 
     private val editor = spy(
         TestableResourceEditor(
-            localCopy,
             fileEditor,
             project,
             clients,
@@ -250,7 +249,7 @@ spec:
     fun `#update should hide all notifications when resource on cluster is outdated`() {
         // given
         doReturn(true)
-            .whenever(clusterResource).isOutdated(any())
+            .whenever(clusterResource).isOutdated(any() as HasMetadata?)
         // when
         editor.update()
         // then
@@ -325,7 +324,7 @@ spec:
     fun `#update should show modified notification if resource on cluster is modified and there are local changes to resource`() {
         // given
         doReturn(true)
-            .whenever(clusterResource).isOutdated(any())
+            .whenever(clusterResource).isOutdated(any() as HasMetadata?)
         doReturn(GARGAMEL)
             .whenever(clusterResource).pull(any())
         doReturn(GARGAMEL_WITH_LABEL) // editor resource is modified
@@ -333,7 +332,7 @@ spec:
         // when
         editor.update()
         // then
-        verify(pullNotification).show(any(), canPush)
+        verify(pullNotification).show(any(), any())
     }
 
     @Test
@@ -342,7 +341,7 @@ spec:
         doReturn(false)
             .whenever(clusterResource).isDeleted() // dont show deleted notification
         doReturn(true)
-            .whenever(clusterResource).isOutdated(any())  // dont show modified notification
+            .whenever(clusterResource).isOutdated(any() as HasMetadata?)  // dont show modified notification
         doReturn(AZRAEL) // cluster resource is different -> editor is outdated
             .whenever(clusterResource).pull(any())
         whenever(createResource.invoke(any(), any()))
@@ -354,14 +353,14 @@ spec:
         // when
         editor.update() // 2nd call: no local changes (editor content was replaced), no modified notification
         // then modification notification only shown once even though #update called twice
-        verify(pullNotification, times(1)).show(any(), canPush)
+        verify(pullNotification, times(1)).show(any(), any())
     }
 
     @Test
     fun `#update should NOT show modified notification if resource on cluster is modified BUT there are NO local changes to resource`() {
         // given
         doReturn(true)
-            .whenever(clusterResource).isOutdated(any())
+            .whenever(clusterResource).isOutdated(any() as HasMetadata?)
         doReturn(GARGAMEL)
             .whenever(clusterResource).pull(any())
         doReturn(GARGAMEL)
@@ -369,14 +368,14 @@ spec:
         // when
         editor.update()
         // then
-        verify(pullNotification, never()).show(any(), canPush)
+        verify(pullNotification, never()).show(any(), any())
     }
 
     @Test
     fun `#update should show reloaded notification if resource on cluster is modified BUT there are NO local changes to resource`() {
         // given
         doReturn(true)
-            .whenever(clusterResource).isOutdated(any())
+            .whenever(clusterResource).isOutdated(any() as HasMetadata?)
         doReturn(GARGAMEL)
             .whenever(clusterResource).pull(any())
         doReturn(GARGAMEL)
@@ -391,7 +390,7 @@ spec:
     fun `#update should set text of document if resource on cluster is modified and there are NO local changes to resource`() {
         // given
         doReturn(true)
-            .whenever(clusterResource).isOutdated(any())
+            .whenever(clusterResource).isOutdated(any() as HasMetadata?)
         doReturn(GARGAMEL)
             .whenever(clusterResource).pull(any())
         doReturn(GARGAMEL)
@@ -678,7 +677,7 @@ spec:
         doReturn(false) // dont show deleted notification
             .whenever(clusterResource).isDeleted()
         doReturn(true) // local copy is outdated
-            .whenever(clusterResource).isOutdated(any())
+            .whenever(clusterResource).isOutdated(any() as HasMetadata?)
         editor.editorResource = GARGAMEL_WITH_LABEL // editor document is modified, is GARGAMEL_WITH_LABEL
         editor.startWatch() // create cluster
         val listener = captureClusterResourceListener(clusterResource) // listener added to cluster
@@ -686,7 +685,7 @@ spec:
         // when
         listener!!.modified(GARGAMEL)
         // then
-        verify(pullNotification).show(GARGAMEL, canPush)
+        verify(pullNotification).show(GARGAMEL, any())
     }
 
     @Test
@@ -697,7 +696,7 @@ spec:
         doReturn(false) // dont show deleted notification
             .whenever(clusterResource).isDeleted()
         doReturn(true) // local copy is outdated
-            .whenever(clusterResource).isOutdated(any())
+            .whenever(clusterResource).isOutdated(any() as HasMetadata?)
         editor.startWatch() // create cluster
         val listener = captureClusterResourceListener(clusterResource) // listener added to cluster
         assertThat(listener).isNotNull()
@@ -737,7 +736,7 @@ spec:
 
     private fun verifyShowAllNotifications(mode: VerificationMode = times(1)) {
         verify(errorNotification, mode).show(any(), any<String>())
-        verify(pullNotification, mode).show(any(), canPush)
+        verify(pullNotification, mode).show(any(), any())
         verify(deletedNotification, mode).show(any())
         verify(pushNotification, mode).show(any(), any())
         verify(pulledNotification, mode).show(any())
@@ -836,7 +835,6 @@ spec:
     }
 
     private class TestableResourceEditor(
-        localCopy: HasMetadata?,
         editor: FileEditor,
         project: Project,
         clients: () -> Clients<out KubernetesClient>,
@@ -855,7 +853,6 @@ spec:
         getKubernetesResourceInfo: (FileEditor, Project) -> KubernetesResourceInfo,
         documentReplaced: AtomicBoolean
     ) : ResourceEditor(
-        localCopy,
         editor,
         project,
         clients,

@@ -29,7 +29,6 @@ import com.redhat.devtools.intellij.kubernetes.editor.notification.PushNotificat
 import com.redhat.devtools.intellij.kubernetes.editor.util.getDocument
 import com.redhat.devtools.intellij.kubernetes.editor.util.getKubernetesResourceInfo
 import com.redhat.devtools.intellij.kubernetes.editor.util.isKubernetesResource
-import com.redhat.devtools.intellij.kubernetes.editor.util.setResourceVersion
 import com.redhat.devtools.intellij.kubernetes.model.ClientConfig
 import com.redhat.devtools.intellij.kubernetes.model.Clients
 import com.redhat.devtools.intellij.kubernetes.model.ClusterResource
@@ -38,6 +37,7 @@ import com.redhat.devtools.intellij.kubernetes.model.ResourceException
 import com.redhat.devtools.intellij.kubernetes.model.createClients
 import com.redhat.devtools.intellij.kubernetes.model.resource.kubernetes.custom.CustomResourceDefinitionMapping
 import com.redhat.devtools.intellij.kubernetes.model.util.causeOrExceptionMessage
+import com.redhat.devtools.intellij.kubernetes.model.util.isGreaterIntThan
 import com.redhat.devtools.intellij.kubernetes.model.util.trimWithEllipsis
 import io.fabric8.kubernetes.api.model.HasMetadata
 import io.fabric8.kubernetes.api.model.apiextensions.v1.CustomResourceDefinition
@@ -98,7 +98,9 @@ open class ResourceEditor(
         getKubernetesResourceInfo(getDocument.invoke(editor), getPsiDocumentManager.invoke(project))
     },
     // for mocking purposes
-    private val documentChanged: AtomicBoolean = AtomicBoolean(false)
+    private val documentChanged: AtomicBoolean = AtomicBoolean(false),
+    // for mocking purposes
+    private val resourceVersion: PersistentEditorValue = PersistentEditorValue(editor)
 ) {
 
     companion object {
@@ -172,7 +174,7 @@ open class ResourceEditor(
      */
     fun update() {
         if (documentChanged.compareAndSet(true, false)) {
-            /** update triggered by change in document [replaceDocument], [setResourceVersion] */
+            /** update triggered by change in document [replaceDocument], [saveResourceVersion] */
             return
         }
         runAsync {
@@ -180,6 +182,7 @@ open class ResourceEditor(
                 val resource = createResource.invoke(editor, definitions) ?: return@runAsync
                 val cluster = clusterResource ?: return@runAsync
                 this.editorResource = resource
+                saveResourceVersion(resource)
                 showNotifications(resource, cluster)
             } catch (e: ResourceException) {
                 runInUI {
@@ -193,13 +196,23 @@ open class ResourceEditor(
         }
     }
 
+    private fun saveResourceVersion(resource: HasMetadata?) {
+        val version = resource?.metadata?.resourceVersion ?: return
+        val storedVersion = resourceVersion.get()
+        if (!version.isGreaterIntThan(storedVersion)) {
+            // don't get back in version
+            return
+        }
+        resourceVersion.set(version)
+    }
+
     private fun showNotifications(resource: HasMetadata, clusterResource: ClusterResource) {
         when {
             clusterResource.isDeleted() ->
                 showDeletedNotification(resource)
             isModified() ->
-                showPushNotification(lastPushedPulled)
-            clusterResource.isOutdated(lastPushedPulled) ->
+                showPushNotification(resourceVersion.get())
+            clusterResource.isOutdated(resourceVersion.get()) ->
                 showPullNotification(resource)
             else ->
                 runInUI {
@@ -208,9 +221,9 @@ open class ResourceEditor(
         }
     }
 
-    private fun showPushNotification(resource: HasMetadata?) {
+    private fun showPushNotification(version: String?) {
         val existsOnCluster = (true == clusterResource?.exists())
-        val isOutdated = (true == clusterResource?.isOutdated(resource))
+        val isOutdated = (true == clusterResource?.isOutdated(version))
         runInUI {
             // hide & show in the same UI thread runnable avoid flickering
             hideNotifications()
@@ -250,9 +263,7 @@ open class ResourceEditor(
      * @return true if the resource is dirty
      */
     private fun isModified(): Boolean {
-        return resourceChangeMutex.withLock {
-            editorResource != this.lastPushedPulled
-        }
+        return editorResource != this.lastPushedPulled
     }
 
     /**
@@ -263,11 +274,12 @@ open class ResourceEditor(
         try {
             val cluster = clusterResource ?: return
             runAsync {
-                val pulledResource = pull(cluster) ?: return@runAsync
+                val pulled = pull(cluster) ?: return@runAsync
+                resourceVersion.set(pulled.metadata.resourceVersion)
                 runInUI {
-                    replaceDocument(pulledResource)
+                    replaceDocument(pulled)
                     hideNotifications()
-                    pulledNotification.show(pulledResource)
+                    pulledNotification.show(pulled)
                 }
             }
         } catch (e: ResourceException) {
@@ -319,7 +331,7 @@ open class ResourceEditor(
             try {
                 val resource = createResource.invoke(editor, definitions) ?: return@runAsync
                 val cluster = clusterResource ?: return@runAsync
-                push(resource, cluster) ?: return@runAsync
+                push(resource, cluster)
                 runInUI {
                     hideNotifications()
                 }
@@ -337,28 +349,15 @@ open class ResourceEditor(
     }
 
     private fun push(resource: HasMetadata, clusterResource: ClusterResource) {
-        return resourceChangeMutex.withLock {
-            val updated = clusterResource.push(resource)
-            val document = getDocument.invoke(editor) ?: return
-            runInUI {
-                runWriteCommand {
-                    val manager = getPsiDocumentManager.invoke(project)
-                    setResourceVersion(
-                        updated?.metadata?.resourceVersion,
-                        document,
-                        manager,
-                        project)
-                    manager.commitDocument(document)
-                    /**
-                     * set editor resource now,
-                     * resource change notification can get in before document was replaced
-                     */
-                    val resource = createResource.invoke(editor, definitions)
-                    this.editorResource = resource
-                    this.lastPushedPulled = resource
-                }
-            }
-        }
+        val updated = clusterResource.push(resource)
+        saveResourceVersion(updated)
+        /**
+         * set editor resource now,
+         * resource change notification can get in before document was replaced
+         */
+        val resource = createResource.invoke(editor, definitions)
+        this.editorResource = resource
+        this.lastPushedPulled = resource
     }
 
     fun startWatch(): ResourceEditor {
@@ -387,14 +386,12 @@ open class ResourceEditor(
             }
 
             override fun removed(removed: Any) {
-                showNotifications()
+                runAsync {
+                    update()
+                }
             }
 
             override fun modified(modified: Any) {
-                showNotifications()
-            }
-
-            private fun showNotifications() {
                 runAsync {
                     update()
                 }
@@ -403,12 +400,14 @@ open class ResourceEditor(
     }
 
     /**
-     * Closes this instance. closes the resource watch and deletes the temporary file if one was created.
+     * Closes this instance. Closes the resource watch and deletes the temporary file if one was created.
      */
     fun close() {
         clusterResource?.close()
+        editor.putUserData(KEY_RESOURCE_EDITOR, null)
         editor.file?.putUserData(KEY_RESOURCE_EDITOR, null)
-        createResourceFileForVirtual(editor.file)?.deleteTemporary()
+        createResourceFileForVirtual.invoke(editor.file)?.deleteTemporary()
+        resourceVersion.save()
     }
 
     /**

@@ -15,6 +15,8 @@ import com.intellij.openapi.editor.Document
 import com.intellij.openapi.fileEditor.FileEditor
 import com.intellij.openapi.fileEditor.FileEditorManager
 import com.intellij.openapi.project.Project
+import com.intellij.openapi.project.ProjectManager
+import com.intellij.openapi.project.ProjectManagerListener
 import com.intellij.openapi.util.Key
 import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.psi.PsiDocumentManager
@@ -26,6 +28,7 @@ import com.redhat.devtools.intellij.kubernetes.model.util.isSameResource
 import com.redhat.devtools.intellij.kubernetes.telemetry.TelemetryService
 import com.redhat.devtools.intellij.telemetry.core.service.TelemetryMessageBuilder
 import io.fabric8.kubernetes.api.model.HasMetadata
+
 
 open class ResourceEditorFactory protected constructor(
     /* for mocking purposes */
@@ -55,7 +58,10 @@ open class ResourceEditorFactory protected constructor(
     private val reportTelemetry: (FileEditor, Project, TelemetryMessageBuilder.ActionMessage) -> Unit = { editor, project, telemetry ->
         val resourceInfo = getKubernetesResourceInfo(getDocument(editor), PsiDocumentManager.getInstance(project))
         TelemetryService.sendTelemetry(resourceInfo, telemetry)
-    }
+    },
+    /* for mocking purposes */
+    private val getProjectManager: () -> ProjectManager = {  ProjectManager.getInstance() }
+
 ) {
 
     companion object {
@@ -161,6 +167,7 @@ open class ResourceEditorFactory protected constructor(
             runAsync { reportTelemetry.invoke(editor, project, telemetry) }
             val resourceEditor = createResourceEditor.invoke(editor, project)
             resourceEditor.createToolbar()
+            getProjectManager.invoke().addProjectManagerListener(project, onProjectClosed(resourceEditor))
             editor.putUserData(ResourceEditor.KEY_RESOURCE_EDITOR, resourceEditor)
             editor.file?.putUserData(ResourceEditor.KEY_RESOURCE_EDITOR, resourceEditor)
             resourceEditor
@@ -168,6 +175,14 @@ open class ResourceEditorFactory protected constructor(
             ErrorNotification(editor, project).show(e.message ?: "", e.cause?.message)
             runAsync { telemetry.error(e).send() }
             null
+        }
+    }
+
+    private fun onProjectClosed(resourceEditor: ResourceEditor): ProjectManagerListener {
+        return object : ProjectManagerListener {
+            override fun projectClosing(project: Project) {
+                resourceEditor.close()
+            }
         }
     }
 
