@@ -56,7 +56,10 @@
 1. change metadata > name to initial name
 
 -> Push notification changes to "update existing"
--> editor title unchanged
+-> editor title unchanged [1]
+
+TEST RESULT:
+[1] -> editor title changes in real time. Change name -> editor title changes in the same moment.
 
 **Push notification "create new"**
 1. "Edit..." resource
@@ -82,10 +85,13 @@
 1. "Edit..." custom resource
 1. add label 
 
--> push notification ("update existing")
+-> push notification ("update existing") 
+
+TEST RESULT:
+[2] -> hit "Push" -> close editor -> "Edit..." same resource -> no our label -> click pull -> our label appears (only for CUSTOM resource)
 
 **Push notification for file that contains custom resource without namespace**
-1. File > New > YML file
+1. File > New > YML file [3]
 2. paste the following into editor
 ```
 ---
@@ -118,8 +124,11 @@ spec:
 ```
 -> push notification ("create new")
 
+TEST RESULT:
+[3] -> File -> new -> there are nothing like "YML file"
+
 **Push notification with "update existing" for knative 'Service' custom resource**
-1. Install knative tutorial https://redhat-developer-demos.github.io/knative-tutorial/knative-tutorial/
+1. Install knative tutorial https://redhat-developer-demos.github.io/knative-tutorial/knative-tutorial/ [4]
 1. Make sure have "greeter" service at Custom Resources > services > greeter
 1. "Edit..." Custom Resources > services > greeter
 1. change name (ex. greeter2)
@@ -127,6 +136,9 @@ spec:
 1. hit "Push"
 
 -> new Service "greeter2" appears in tree
+
+TEST RESULT:
+[4] Cannot test: knative-tutorial for openshift is outdated, Openshift Serverless is not in Install Operator
 
 **Push notification replaced by deleted notification**
 1. "Edit..." resource
@@ -161,8 +173,11 @@ spec:
 1. "Edit..." resource
 1. modify resource externally (console, kubectl)
 
--> editor content is pulled (verify by watching metadata > `resourceVersion`)
+-> editor content is pulled (verify by watching metadata > `resourceVersion`) [5]
 -> Pulled notification appears
+
+TEST RESULT:
+[5] -> "Changed on cluster" notification appears with "Push", "Pull" and "Ignore" options. Was not pulled automatically.
 
 **Push notification appears**
 1. "Edit..." resource
@@ -177,10 +192,13 @@ spec:
 1. modify resource (ex. change label)
    -> Push notification appears
 1. modify resource externally
-   -> Push notification shows additional option "Pull"
+   -> Push notification shows additional option "Pull" [6]
 1. hit "Pull"
 
 -> editor shows new resource, notification disappears
+
+TEST RESULT:
+[6] -> Additionally shows "Pull" and "Ignore" options.
 
 **Error notification appears when pasting invalid content**
 1. "Edit..." resource
@@ -216,9 +234,12 @@ metadata:
 
 **Error notification appears on startup**
 1. have editor with invalid content
-2. restart IJ
+2. restart IJ [7]
 
 -> Error notification appears
+
+TEST RESULT:
+[7] -> After restart IJ opens project but not the editors. I dont think it is the kubernetes problem. It already was there once, then it disappeared, now this problem apears again.
 
 **Details in error notification shows cause**
 1. "Edit..." resource
@@ -234,10 +255,13 @@ metadata:
    -> error notification ("Invalid kubernetes yaml/json")
 1. change kind to valid value
 
--> error notification disappears
+-> error notification disappears [8]
+
+TEST RESULT:
+[8] -> change "kind" from "Node" to "Nodea" -> apears notification "Unsupported resource kind Nodea in version v1" -> change kind back from "Nodea" to "Node" -> notification are still there.
 
 **Push notification appears for local file**
-1. File > New > YML file
+1. File > New > YML file[3]
 2. paste the following into editor
 ```
 apiVersion: batch/v1
@@ -260,10 +284,13 @@ spec:
 ```
 -> Push notification appears
 
+TEST RESULT:
+[3] -> File -> new -> there are nothing like "YML file"
+
 **Pull notification appears when switching back to editor**
 1. "Edit..." resource
 2. select all && copy
-3. File > New > YML File (ex. pod.yml)
+3. File > New > YML File (ex. pod.yml) [3]
 4. paste
 5. modify content (ex. add label)
 6. push to cluster
@@ -271,8 +298,11 @@ spec:
 
 -> pull notification appears
 
+TEST RESULT:
+[3] -> File -> new -> there are nothing like "YML file"
+
 **Change replicas causes new pods to appear in tree**
-1. File > New > YML file
+1. File > New > YML file [3]
 2. paste the following into editor
 ```
 apiVersion: apps/v1
@@ -306,3 +336,6 @@ spec:
 6. change `spec > replicas` to 2 & push
 
 -> 2nd pod `sise-deploy-xxxx` appears in all 3 categories
+
+TEST RESULT:
+[3] -> File -> new -> there are nothing like "YML file"
