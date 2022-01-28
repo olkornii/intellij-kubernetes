@@ -60,7 +60,8 @@
 
 TEST RESULT:
 [1] -> editor title changes in real time. Change name -> editor title changes in the same moment.
-
+=> complaint is irrelevant since it's not harmful. Aim of this test case is to verify that "push to new" and "push to existing" works properly
+  
 **Push notification "create new"**
 1. "Edit..." resource
 1. change metadata > name / namespace / kind 
@@ -89,6 +90,7 @@ TEST RESULT:
 
 TEST RESULT:
 [2] -> hit "Push" -> close editor -> "Edit..." same resource -> no our label -> click pull -> our label appears (only for CUSTOM resource)
+=> fixed.
 
 **Push notification for file that contains custom resource without namespace**
 1. File > New > YML file [3]
@@ -126,6 +128,7 @@ spec:
 
 TEST RESULT:
 [3] -> File -> new -> there are nothing like "YML file"
+=> "YML file" is a placeholder for your own filename. You can replace it by "foo.yml", "task-foo.yml" etc.
 
 **Push notification with "update existing" for knative 'Service' custom resource**
 1. Install knative tutorial https://redhat-developer-demos.github.io/knative-tutorial/knative-tutorial/ [4]
@@ -178,6 +181,8 @@ TEST RESULT:
 
 TEST RESULT:
 [5] -> "Changed on cluster" notification appears with "Push", "Pull" and "Ignore" options. Was not pulled automatically.
+=> test case is outdated. The goal in #319 is to NOT replace the document in any case (neither after a push, nor upon external change). 
+Removed this usecase in the document.
 
 **Push notification appears**
 1. "Edit..." resource
@@ -199,6 +204,7 @@ TEST RESULT:
 
 TEST RESULT:
 [6] -> Additionally shows "Pull" and "Ignore" options.
+=> Correct behaviour (Is the usecase text misleading?). When you modify the resource in the editor, the "Push" notification appears. If an external change happens there are changes that you can "Pull". The notification should thus have "Pull" and "Pull". "Ignore" should always be available so that you can ignore any action for now.
 
 **Error notification appears when pasting invalid content**
 1. "Edit..." resource
