@@ -69,6 +69,10 @@
 1. change metadata > name to name of resource 2
    -> Push notification "create new"
 
+TEST RESULT:
+-> Push notification "update existing". As for me, it is ok, no?
+
+
 **Can push resource even if current namespace is different**
 1. "Edit..." namespaced resource
 1. "Use Namespace" on different Namespace   
@@ -121,12 +125,18 @@ spec:
 ```
 -> push notification "create new"
 
+TEST RESULT:
+-> unsuported
+
 **Pull notification "update existing" for new file with existing resource**
 1. make sure there's a task "foo" on cluster
 2. File > New > foo.yml
 3. paste yaml in previous use case
 
 -> Pull notification with "Push" link
+
+TEST RESULT:
+-> blocked by previous use case
 
 **Push notification with "update existing" for knative 'Service' custom resource**
 3. Install knative tutorial https://redhat-developer-demos.github.io/knative-tutorial/knative-tutorial/
@@ -137,6 +147,9 @@ spec:
 7. hit "Push"
 
 -> new Service "greeter2" appears in tree
+
+TEST RESULT:
+-> Cannot test: knative-tutorial for openshift is outdated, Openshift Serverless is not in Install Operator
 
 **Deleted notification appears on new editor**
 1. "Edit..." resource
@@ -150,6 +163,9 @@ spec:
 1. delete deployment (in tree, kubectl or console)
 
 -> "Push update existing" replaced by "Deleted on Cluster"
+
+TEST RESULT:
+-> "Edit" resource -> change name -> "Create" notification appears -> delete resource -> "Create" is still there -> change name back -> notification disappears, but resource with this name does not exist anymore. Change name again and notification appears.
 
 **Push notification appears**
 1. "Edit..." resource
@@ -213,6 +229,9 @@ metadata:
 
 -> Error notification appears
 
+TEST RESULT:
+-> After restart IJ opens project but not the editors. I dont think it is the kubernetes problem. It already was there once, then it disappeared, now this problem apears again.
+
 **Details in error notification shows cause**
 1. "Edit..." resource
 1. change kind to invalid value
@@ -228,6 +247,9 @@ metadata:
 1. change kind to valid value
 
 -> error notification disappears
+
+TEST RESULT:
+-> same as previously, error notification are still there with the previous kind name. Teste on openshift cluster Node resource.
 
 **Push notification appears for local file**
 1. File > New > YML file
