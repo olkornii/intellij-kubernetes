@@ -71,6 +71,7 @@
 
 TEST RESULT:
 -> Push notification "update existing". As for me, it is ok, no?
+=> You're absolutely right. Will correct testing document. 
 
 
 **Can push resource even if current namespace is different**
@@ -127,6 +128,7 @@ spec:
 
 TEST RESULT:
 -> unsuported (screenshot with foo)
+=> You're most likely missing the tekton CRDs (if those are not present - included in your cluster as soon as you install tekton - the resource is reported as unsupported kind). Will correct the testing document to point this out. (apply https://redhat-scholars.github.io/tekton-tutorial/tekton-tutorial/setup.html)
 
 **Pull notification "update existing" for new file with existing resource**
 1. make sure there's a task "foo" on cluster
@@ -137,7 +139,8 @@ TEST RESULT:
 
 TEST RESULT:
 -> blocked by previous use case
-
+=> Most likely caused by missing tekton in your cluster (apply https://redhat-scholars.github.io/tekton-tutorial/tekton-tutorial/setup.html)
+  
 **Push notification with "update existing" for knative 'Service' custom resource**
 3. Install knative tutorial https://redhat-developer-demos.github.io/knative-tutorial/knative-tutorial/
 4. Make sure have "greeter" service at Custom Resources > services > greeter
@@ -166,7 +169,8 @@ TEST RESULT:
 
 TEST RESULT:
 -> "Edit" resource -> change name -> "Create" notification appears -> delete resource -> "Create" is still there -> change name back -> notification disappears, but resource with this name does not exist anymore. Change name again and notification appears.
-
+=> behaviour here is correct. You deleted a resource while you were editing a different one. Once you get back to the initial resource, it looks to the editor as if the resource in the editor is new (doesn't exist on the cluster, it's not "deleted"). "Deleted" notifications are only displayed if the removal happens while you're editing. If a different behaviour makes more sense to you then we would have to add "memory"/"history" to the editor. It would have to remember the resources it was editing and therefore then know that the resource it is editing in the last step existed before.  
+  
 **Push notification appears**
 1. "Edit..." resource
 1. add label 
