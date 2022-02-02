@@ -126,7 +126,7 @@ spec:
 -> push notification "create new"
 
 TEST RESULT:
--> unsuported
+-> unsuported (screenshot with foo)
 
 **Pull notification "update existing" for new file with existing resource**
 1. make sure there's a task "foo" on cluster
@@ -249,7 +249,7 @@ TEST RESULT:
 -> error notification disappears
 
 TEST RESULT:
--> same as previously, error notification are still there with the previous kind name. Teste on openshift cluster Node resource.
+-> same as previously, error notification are still there with the previous kind name. Teste on openshift cluster Node resource. (screenshot with crc-pkjt4-master-0sss)
 
 **Push notification appears for local file**
 1. File > New > YML file
