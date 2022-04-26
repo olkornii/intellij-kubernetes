@@ -69,6 +69,10 @@
 1. change metadata > name to name of resource 2
    -> Push notification "update existing"
 
+NOTE:
+1. Pull notification instead of Push "update". "Node blablabla changed on cluster. Pull?"
+
+
 **Can push resource even if current namespace is different**
 1. "Edit..." namespaced resource
 1. "Use Namespace" on different Namespace   
@@ -223,6 +227,11 @@ metadata:
 2. restart IJ
 
 -> Error notification appears
+
+NOTE:
+
+1. previously opened resource's editor is not reopened after restart.
+2. Open some project file (in 1:Project tab) in editor -> restart -> editor reopens.
 
 **Details in error notification shows cause**
 1. "Edit..." resource
