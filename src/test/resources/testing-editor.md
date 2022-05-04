@@ -71,6 +71,12 @@
 
 NOTE:
 1. Pull notification instead of Push "update". "Node blablabla changed on cluster. Pull?"
+=> This behaviour is correct. Whether Pull or Push notifications may be shown, both being correct. 
+Which one of the 2 appears depends on the `resourceVersion` property of the kubernetes resource. 
+Push is shown if the `resourceVersion` property of the resource in your editor is >= than the one of the resource on the cluster. 
+Inversely a Pull notification is shown if the cluster has a newer `resourceversion` than the one in your editor.
+  
+I'll change the testing document accordingly
 
 
 **Can push resource even if current namespace is different**
@@ -231,6 +237,16 @@ metadata:
 NOTE:
 
 1. previously opened resource's editor is not reopened after restart.
+=> I cannot reproduce this with the following erroneous k8s yaml:
+```
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: countdown
+  labels:
+    jedi: yoda
+lucky luke  
+```  
 2. Open some project file (in 1:Project tab) in editor -> restart -> editor reopens.
 
 **Details in error notification shows cause**
