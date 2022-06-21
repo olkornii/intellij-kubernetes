@@ -39,6 +39,8 @@
 
 -> editor title displays the filename (= default), there's no action toolbar (for pushing/pulling from/to cluster)
 
+COMMENT: usecase's title is unclear, steps are ok.
+
 **Irrelevant change, no notification**
 1. "Edit..." resource
 1. add space after property value
@@ -122,12 +124,17 @@ spec:
 ```
 -> push notification "create new"
 
+COMMENT: Clarify steps for creating new file: "Edit..." some resource (some file must be opened with editor) -> File -> New -> New File -> "foo.yml"
+
 **Pull notification "update existing" for new file with existing resource**
 1. make sure there's a task "foo" on cluster
 2. File > New > foo.yml
 3. paste yaml in previous use case
 
 -> Pull notification with "Push" link
+
+NOTE: foo.yml is already exists in /tmp. Cannot create file with same name.
+WORKAROUND: delete foo.yml from /tmp before 1. step.
 
 **Push notification with "update existing" for knative 'Service' custom resource**
 3. Install knative tutorial https://redhat-developer-demos.github.io/knative-tutorial/knative-tutorial/
@@ -153,6 +160,8 @@ spec:
 
 -> "Push update existing" replaced by "Deleted on Cluster"
 
+COMMENT: change "deployment" to "resource"
+
 **Push notification appears**
 1. "Edit..." resource
 1. add label
@@ -169,6 +178,8 @@ spec:
 1. change metadata > name to initial name
 
 -> "Push create new" should still be visible
+
+COMMENT: change "deployment" to "resource"
 
 **Pull notification appears**
 1. "Edit..." resource
@@ -191,6 +202,8 @@ spec:
 2. paste invalid yaml
 
 -> Error notification appears
+
+COMMENT: specify - replace actual resource with new invalid one
 
 **Error notification disappears when correcting invalid content**
 1. "Edit..." resource. Have an editor which starts with
@@ -218,11 +231,15 @@ metadata:
 
 -> Error notification appears
 
+COMMENT: is a part of previous, don't need to test same thing twice
+
 **Error notification appears on startup**
 1. have editor with invalid content
 2. restart IJ
 
 -> Error notification appears
+
+NOTE: "Edit..." some resource -> paste "   " before "---" -> see error notification -> restart IDE -> error notification disappears. Works well with "aaa" after "metadata:".
 
 **Details in error notification shows cause**
 1. "Edit..." resource
