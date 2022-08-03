@@ -19,6 +19,7 @@ import com.intellij.remoterobot.fixtures.FixtureName;
 import org.jetbrains.annotations.NotNull;
 
 import java.time.Duration;
+import java.util.List;
 
 import static com.intellij.remoterobot.search.locators.Locators.byXpath;
 
@@ -40,4 +41,13 @@ public class EditorsSplittersFixture extends CommonContainerFixture {
         SingleHeighLabelFixture myLabel = find(SingleHeighLabelFixture.class, byXpath("//div[@accessiblename='" + fileName + "' and @class='SingleHeightLabel']"), Duration.ofSeconds(5));
         myLabel.close();
     }
+
+//    public void closeOpenedEditors(){
+//        List<SingleHeighLabelFixture> singleHeighLabelsList = findAll(SingleHeighLabelFixture.class, byXpath("//div[@class='SingleHeightLabel']"));
+////        newProjectTypeList.findText(projectType).click();
+//        for (SingleHeighLabelFixture singleHeighLabel : singleHeighLabelsList) {
+//            singleHeighLabel.find(ComponentFixture.class, byXpath("//div[@accessiblename='Close. Alt-Click to Close Others (Ctrl+F4)' and @class='InplaceButton']")).click();
+//        }
+//    }
+
 }
