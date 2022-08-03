@@ -54,7 +54,7 @@ public class BasicTests {
 
     @BeforeAll
     public static void connect() {
-        robot = UITestRunner.runIde(IntelliJVersion.COMMUNITY_V_2020_2, 8580);
+        robot = UITestRunner.runIde(IntelliJVersion.COMMUNITY_V_2022_1, 8580);
         createEmptyProject();
         openKubernetesTab();
         try {
