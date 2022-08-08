@@ -108,6 +108,12 @@ public class BasicTests {
 //        newProjectDialogWizard.next();
         newProjectDialogWizard.finish();
 
+        try {
+            Thread.sleep(15000); // need around 5 seconds to update kubernetes view tree
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+
         final IdeStatusBar ideStatusBar = robot.find(IdeStatusBar.class);
         ideStatusBar.waitUntilProjectImportIsComplete();
         ProjectStructureDialog.cancelProjectStructureDialogIfItAppears(robot);
