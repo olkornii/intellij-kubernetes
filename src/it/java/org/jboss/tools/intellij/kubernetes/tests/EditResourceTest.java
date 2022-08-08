@@ -14,14 +14,9 @@ import com.intellij.remoterobot.RemoteRobot;
 import com.intellij.remoterobot.fixtures.ComponentFixture;
 import com.intellij.remoterobot.fixtures.dataExtractor.RemoteText;
 import com.intellij.remoterobot.utils.Keyboard;
-import org.assertj.swing.core.MouseButton;
 import org.jboss.tools.intellij.kubernetes.fixtures.mainIdeWindow.EditorsSplittersFixture;
 import org.jboss.tools.intellij.kubernetes.fixtures.menus.ActionToolbarMenu;
-import org.jboss.tools.intellij.kubernetes.fixtures.menus.RightClickMenu;
 
-import java.awt.datatransfer.Clipboard;
-import java.awt.datatransfer.StringSelection;
-import java.awt.event.KeyEvent;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
