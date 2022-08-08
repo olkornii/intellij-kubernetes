@@ -105,7 +105,6 @@ public class BasicTests {
         flatWelcomeFrame.createNewProject();
         final NewProjectDialogWizard newProjectDialogWizard = flatWelcomeFrame.find(NewProjectDialogWizard.class, Duration.ofSeconds(20));
         selectNewProjectType("Empty Project");
-//        newProjectDialogWizard.next();
         newProjectDialogWizard.finish();
 
         try {
