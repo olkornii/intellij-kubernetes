@@ -65,8 +65,6 @@ public class BasicTests {
         KubernetesToolsFixture kubernetesToolsFixture = robot.find(KubernetesToolsFixture.class);
         kubernetesViewTree = kubernetesToolsFixture.getKubernetesViewTree();
         waitFor(Duration.ofSeconds(15), Duration.ofSeconds(1), "Kubernetes Tree View is not available.", BasicTests::isKubernetesViewTreeAvailable);
-
-        EditResourceTest.editResource(robot, kubernetesViewTree);
     }
 
     @AfterAll
@@ -79,17 +77,17 @@ public class BasicTests {
         step("New Empty Project", () -> ClusterConnectedTest.checkClusterConnected(kubernetesViewTree));
     }
 
-//    @Test
+    @Test
     public void openResourceEditor() {
         step("open Resource Editor", () -> OpenResourceEditorTest.checkResourceEditor(robot, kubernetesViewTree));
     }
 
-//     @Test
+     @Test
     public void editResource() {
         step("edit Resource", () -> EditResourceTest.editResource(robot, kubernetesViewTree));
     }
 
-//     @Test
+     @Test
     public void createResourceByEdit() {
         step("create Resource", () -> CreateResourceByEditTest.createResourceByEdit(robot, kubernetesViewTree));
 
