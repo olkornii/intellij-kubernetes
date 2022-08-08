@@ -18,6 +18,8 @@ import com.redhat.devtools.intellij.commonuitest.fixtures.dialogs.errors.IdeFata
 import org.assertj.swing.core.MouseButton;
 import org.jboss.tools.intellij.kubernetes.fixtures.mainIdeWindow.IdeStatusBarFixture;
 
+import java.awt.*;
+import java.awt.datatransfer.Clipboard;
 import java.time.Duration;
 import java.util.List;
 
@@ -143,5 +145,13 @@ public abstract class AbstractKubernetesTest {
         IdeFatalErrorsDialog ideErrorsDialog = robot.find(IdeFatalErrorsDialog.class);
         ideErrorsDialog.clearAll();
         return true;
+    }
+
+    public static Clipboard getSystemClipboard()
+    {
+        Toolkit defaultToolkit = Toolkit.getDefaultToolkit();
+        Clipboard systemClipboard = defaultToolkit.getSystemClipboard();
+
+        return systemClipboard;
     }
 }

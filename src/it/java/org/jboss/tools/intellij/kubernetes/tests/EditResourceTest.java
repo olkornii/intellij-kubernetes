@@ -14,9 +14,13 @@ import com.intellij.remoterobot.RemoteRobot;
 import com.intellij.remoterobot.fixtures.ComponentFixture;
 import com.intellij.remoterobot.fixtures.dataExtractor.RemoteText;
 import com.intellij.remoterobot.utils.Keyboard;
+import org.assertj.swing.core.MouseButton;
 import org.jboss.tools.intellij.kubernetes.fixtures.mainIdeWindow.EditorsSplittersFixture;
 import org.jboss.tools.intellij.kubernetes.fixtures.menus.ActionToolbarMenu;
+import org.jboss.tools.intellij.kubernetes.fixtures.menus.RightClickMenu;
 
+import java.awt.datatransfer.Clipboard;
+import java.awt.datatransfer.StringSelection;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -43,9 +47,16 @@ public class EditResourceTest extends AbstractKubernetesTest{
             labelsId++;
         }
         RemoteText placeForNewLabel = remote_text.get(labelsId+2); // +1 because we need the next one, +1 because between every 2 real elements is space
-        placeForNewLabel.click(); // set the cursor
+
+        Clipboard clipboard = getSystemClipboard();
+        String text = "    some_labels: \"some_labels\"";
+        clipboard.setContents(new StringSelection(text), null);
+
+        placeForNewLabel.click(MouseButton.RIGHT_BUTTON);
+        RightClickMenu rightClickMenu = robot.find(RightClickMenu.class);
+        rightClickMenu.select("Paste");
+
         Keyboard my_keyboard = new Keyboard(robot);
-        my_keyboard.enterText("    some_labels: \"some_labels\"");
         my_keyboard.enter();
         my_keyboard.backspace();
 

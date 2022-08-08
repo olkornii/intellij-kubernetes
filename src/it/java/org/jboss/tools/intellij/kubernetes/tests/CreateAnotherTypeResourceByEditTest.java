@@ -107,14 +107,6 @@ public class CreateAnotherTypeResourceByEditTest extends AbstractKubernetesTest{
         }
     }
 
-    private static Clipboard getSystemClipboard()
-    {
-        Toolkit defaultToolkit = Toolkit.getDefaultToolkit();
-        Clipboard systemClipboard = defaultToolkit.getSystemClipboard();
-
-        return systemClipboard;
-    }
-
     private static void checkErrors(RemoteRobot robot){
         String errorMessage = "";
         boolean isErrorAfterPush = isError(robot);

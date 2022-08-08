@@ -106,12 +106,4 @@ public class CreateResourceByEditTest extends AbstractKubernetesTest{
             return false;
         }
     }
-
-    private static Clipboard getSystemClipboard()
-    {
-        Toolkit defaultToolkit = Toolkit.getDefaultToolkit();
-        Clipboard systemClipboard = defaultToolkit.getSystemClipboard();
-
-        return systemClipboard;
-    }
 }

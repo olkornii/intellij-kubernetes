@@ -58,7 +58,7 @@ public class BasicTests {
         createEmptyProject();
         openKubernetesTab();
         try {
-            Thread.sleep(5000);
+            Thread.sleep(5000); // need around 5 seconds to update kubernetes view tree
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
@@ -72,12 +72,12 @@ public class BasicTests {
         UITestRunner.closeIde();
     }
 
-    @Test
+//    @Test
     public void checkClusterConnected() {
         step("New Empty Project", () -> ClusterConnectedTest.checkClusterConnected(kubernetesViewTree));
     }
 
-    @Test
+//    @Test
     public void openResourceEditor() {
         step("open Resource Editor", () -> OpenResourceEditorTest.checkResourceEditor(robot, kubernetesViewTree));
     }
@@ -87,7 +87,7 @@ public class BasicTests {
         step("edit Resource", () -> EditResourceTest.editResource(robot, kubernetesViewTree));
     }
 
-     @Test
+//     @Test
     public void createResourceByEdit() {
         step("create Resource", () -> CreateResourceByEditTest.createResourceByEdit(robot, kubernetesViewTree));
 
@@ -105,7 +105,7 @@ public class BasicTests {
         flatWelcomeFrame.createNewProject();
         final NewProjectDialogWizard newProjectDialogWizard = flatWelcomeFrame.find(NewProjectDialogWizard.class, Duration.ofSeconds(20));
         selectNewProjectType("Empty Project");
-        newProjectDialogWizard.next();
+//        newProjectDialogWizard.next();
         newProjectDialogWizard.finish();
 
         final IdeStatusBar ideStatusBar = robot.find(IdeStatusBar.class);
@@ -118,9 +118,11 @@ public class BasicTests {
     }
 
     private static void openKubernetesTab(){
-        final ToolWindowsPane toolWindowsPane = robot.find(ToolWindowsPane.class);
-        waitFor(Duration.ofSeconds(10), Duration.ofSeconds(1), "The 'Kubernetes' stripe button is not available.", () -> isStripeButtonAvailable(toolWindowsPane, "Kubernetes"));
-        toolWindowsPane.stripeButton("Kubernetes", false).click();
+//        final ToolWindowsPane toolWindowsPane = robot.find(ToolWindowsPane.class);
+//        waitFor(Duration.ofSeconds(10), Duration.ofSeconds(1), "The 'Kubernetes' stripe button is not available.", () -> isStripeButtonAvailable(toolWindowsPane, "Kubernetes"));
+//        toolWindowsPane.stripeButton("Kubernetes", false).click();
+        final ComponentFixture toolWinPane = robot.find(ComponentFixture.class, byXpath("//div[@class='ToolWindowPane']"), Duration.ofSeconds(10));
+        robot.find(ComponentFixture.class, byXpath("//div[@accessiblename='Kubernetes' and @class='StripeButton' and @text='Kubernetes']"), Duration.ofSeconds(10)).click();
     }
 
     private static boolean isStripeButtonAvailable(ToolWindowsPane toolWindowsPane, String label) { // loading...
