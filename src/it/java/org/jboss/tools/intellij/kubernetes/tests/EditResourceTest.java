@@ -21,6 +21,7 @@ import org.jboss.tools.intellij.kubernetes.fixtures.menus.RightClickMenu;
 
 import java.awt.datatransfer.Clipboard;
 import java.awt.datatransfer.StringSelection;
+import java.awt.event.KeyEvent;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -47,18 +48,20 @@ public class EditResourceTest extends AbstractKubernetesTest{
             labelsId++;
         }
         RemoteText placeForNewLabel = remote_text.get(labelsId+2); // +1 because we need the next one, +1 because between every 2 real elements is space
+        placeForNewLabel.click();
 
-        Clipboard clipboard = getSystemClipboard();
-        String text = "    some_labels: \"some_labels\"";
-        clipboard.setContents(new StringSelection(text), null);
+//        Clipboard clipboard = getSystemClipboard();
+        String text = "    somes_labels: \"somes_labels";
+//        clipboard.setContents(new StringSelection(text), null);
 
-        placeForNewLabel.click(MouseButton.RIGHT_BUTTON);
-        RightClickMenu rightClickMenu = robot.find(RightClickMenu.class);
-        rightClickMenu.select("Paste");
+//        placeForNewLabel.click(MouseButton.RIGHT_BUTTON);
+//        RightClickMenu rightClickMenu = robot.find(RightClickMenu.class);
+//        rightClickMenu.select("Paste");
 
         Keyboard my_keyboard = new Keyboard(robot);
-        my_keyboard.enter();
-        my_keyboard.backspace();
+        my_keyboard.enter(); // create empty line
+        placeForNewLabel.click(); // focus on the empty line
+        my_keyboard.enterText(text); // enter text
 
         ActionToolbarMenu toolbarMenu = robot.find(ActionToolbarMenu.class);
         toolbarMenu.PushToCluster();
@@ -73,7 +76,7 @@ public class EditResourceTest extends AbstractKubernetesTest{
         List<RemoteText> remoteTextNew = textFixtureNew.findAllText();
         boolean labelExist = false;
         for (RemoteText actual_remote_text : remoteTextNew){
-            if (actual_remote_text.getText().contains("some_labels")){
+            if (actual_remote_text.getText().contains("somes_labels")){
                 labelExist = true;
                 break;
             }

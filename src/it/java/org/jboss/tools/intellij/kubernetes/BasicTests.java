@@ -72,12 +72,12 @@ public class BasicTests {
         UITestRunner.closeIde();
     }
 
-    @Test
+//    @Test
     public void checkClusterConnected() {
         step("New Empty Project", () -> ClusterConnectedTest.checkClusterConnected(kubernetesViewTree));
     }
 
-    @Test
+//    @Test
     public void openResourceEditor() {
         step("open Resource Editor", () -> OpenResourceEditorTest.checkResourceEditor(robot, kubernetesViewTree));
     }
@@ -87,7 +87,7 @@ public class BasicTests {
         step("edit Resource", () -> EditResourceTest.editResource(robot, kubernetesViewTree));
     }
 
-     @Test
+//     @Test
     public void createResourceByEdit() {
         step("create Resource", () -> CreateResourceByEditTest.createResourceByEdit(robot, kubernetesViewTree));
 
