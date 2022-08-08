@@ -46,14 +46,16 @@ public class CreateResourceByEditTest extends AbstractKubernetesTest{
         Keyboard myKeyboard = new Keyboard(robot);
         String newEditorTitle = newResourceName;
 
-        Clipboard clipboard = getSystemClipboard();
-        String text = "\"" + newResourceName + "\"";
-        clipboard.setContents(new StringSelection(text), null);
+//        Clipboard clipboard = getSystemClipboard();
+        String text = "\"" + newResourceName;
+//        clipboard.setContents(new StringSelection(text), null);
 
         RemoteText namePlace = findResourceNamePosition(robot, editorSplitter, myKeyboard);
-        namePlace.click(MouseButton.RIGHT_BUTTON);
-        RightClickMenu rightClickMenu = robot.find(RightClickMenu.class);
-        rightClickMenu.select("Paste");
+        namePlace.doubleClick();
+        myKeyboard.enterText(text); // replace with new name
+//        namePlace.click();
+//        RightClickMenu rightClickMenu = robot.find(RightClickMenu.class);
+//        rightClickMenu.select("Paste");
 
         ActionToolbarMenu toolbarMenu = robot.find(ActionToolbarMenu.class);
         toolbarMenu.PushToCluster();
@@ -93,7 +95,7 @@ public class CreateResourceByEditTest extends AbstractKubernetesTest{
         }
 
         RemoteText namePlace = remoteText.get(nameId+3); // +1 because we need the next one, +1 because between every 2 real elements is space, +1 because here is the ":"
-        namePlace.doubleClick(); // set the cursor
+//        namePlace.doubleClick(); // set the cursor
 
         return namePlace;
     }
