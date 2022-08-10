@@ -41,13 +41,4 @@ public class EditorsSplittersFixture extends CommonContainerFixture {
         SingleHeighLabelFixture myLabel = find(SingleHeighLabelFixture.class, byXpath("//div[@accessiblename='" + fileName + "' and @class='SingleHeightLabel']"), Duration.ofSeconds(5));
         myLabel.close();
     }
-
-//    public void closeOpenedEditors(){
-//        List<SingleHeighLabelFixture> singleHeighLabelsList = findAll(SingleHeighLabelFixture.class, byXpath("//div[@class='SingleHeightLabel']"));
-////        newProjectTypeList.findText(projectType).click();
-//        for (SingleHeighLabelFixture singleHeighLabel : singleHeighLabelsList) {
-//            singleHeighLabel.find(ComponentFixture.class, byXpath("//div[@accessiblename='Close. Alt-Click to Close Others (Ctrl+F4)' and @class='InplaceButton']")).click();
-//        }
-//    }
-
 }
