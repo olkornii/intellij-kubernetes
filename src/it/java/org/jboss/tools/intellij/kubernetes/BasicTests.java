@@ -107,7 +107,7 @@ public class BasicTests {
         selectNewProjectType("Empty Project");
         newProjectDialogWizard.finish();
 
-        final IdeStatusBar ideStatusBar = robot.find(IdeStatusBar.class);
+        final IdeStatusBar ideStatusBar = robot.find(IdeStatusBar.class, Duration.ofSeconds(10));
         ideStatusBar.waitUntilProjectImportIsComplete();
         ProjectStructureDialog.cancelProjectStructureDialogIfItAppears(robot);
         closeTipDialogIfItAppears();
