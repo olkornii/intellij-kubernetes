@@ -20,7 +20,7 @@ import com.redhat.devtools.intellij.commonuitest.fixtures.dialogs.information.Ti
 import com.redhat.devtools.intellij.commonuitest.utils.runner.IntelliJVersion;
 import com.redhat.devtools.intellij.commonuitest.fixtures.dialogs.project.NewProjectDialogWizard;
 import com.redhat.devtools.intellij.commonuitest.fixtures.mainidewindow.idestatusbar.IdeStatusBar;
-import com.redhat.devtools.intellij.commonuitest.fixtures.mainidewindow.toolwindowspane.ToolWindowsPane;
+import com.redhat.devtools.intellij.commonuitest.fixtures.mainidewindow.toolwindowspane.ToolWindowPane;
 import org.jboss.tools.intellij.kubernetes.fixtures.dialogs.ProjectStructureDialog;
 import org.jboss.tools.intellij.kubernetes.fixtures.mainIdeWindow.KubernetesToolsFixture;
 import static com.intellij.remoterobot.search.locators.Locators.byXpath;
@@ -117,21 +117,21 @@ public class BasicTests {
     }
 
     private static void openKubernetesTab(){
-//        final ToolWindowsPane toolWindowsPane = robot.find(ToolWindowsPane.class);
-//        waitFor(Duration.ofSeconds(10), Duration.ofSeconds(1), "The 'Kubernetes' stripe button is not available.", () -> isStripeButtonAvailable(toolWindowsPane, "Kubernetes"));
-//        toolWindowsPane.stripeButton("Kubernetes", false).click();
-        final ComponentFixture toolWinPane = robot.find(ComponentFixture.class, byXpath("//div[@class='ToolWindowPane']"), Duration.ofSeconds(10));
-        robot.find(ComponentFixture.class, byXpath("//div[@accessiblename='Kubernetes' and @class='StripeButton' and @text='Kubernetes']"), Duration.ofSeconds(10)).click();
+        final ToolWindowPane toolWindowPane = robot.find(ToolWindowPane.class);
+//        waitFor(Duration.ofSeconds(10), Duration.ofSeconds(1), "The 'Kubernetes' stripe button is not available.", () -> ToolWindowPane.isStripeButtonAvailable("Kubernetes", false));
+        toolWindowPane.stripeButton("Kubernetes", false).click();
+//        final ComponentFixture toolWinPane = robot.find(ComponentFixture.class, byXpath("//div[@class='ToolWindowPane']"), Duration.ofSeconds(10));
+//        robot.find(ComponentFixture.class, byXpath("//div[@accessiblename='Kubernetes' and @class='StripeButton' and @text='Kubernetes']"), Duration.ofSeconds(10)).click();
     }
 
-    private static boolean isStripeButtonAvailable(ToolWindowsPane toolWindowsPane, String label) { // loading...
-        try {
-            toolWindowsPane.stripeButton(label ,false);
-        } catch (WaitForConditionTimeoutException e) {
-            return false;
-        }
-        return true;
-    }
+//    private static boolean isStripeButtonAvailable(ToolWindowsPane toolWindowsPane, String label) { // loading...
+//        try {
+//            toolWindowsPane.stripeButton(label ,false);
+//        } catch (WaitForConditionTimeoutException e) {
+//            return false;
+//        }
+//        return true;
+//    }
 
     private static boolean isKubernetesViewTreeAvailable(){
         List<RemoteText> allText = kubernetesViewTree.findAllText();
