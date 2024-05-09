@@ -126,7 +126,7 @@ public class BasicTests {
         return !"Nothing to show".equals(firstText);
     }
 
-    public static void closeTipDialogIfItAppears() {
+    private static void closeTipDialogIfItAppears() {
         try {
             TipDialog tipDialog = robot.find(TipDialog.class, Duration.ofSeconds(10));
             tipDialog.close();
@@ -135,7 +135,7 @@ public class BasicTests {
         }
     }
 
-    public static void closeGotItPopup() {
+    private static void closeGotItPopup() {
         try {
             robot.find(ComponentFixture.class, byXpath("JBList", "//div[@accessiblename='Got It' and @class='JButton' and @text='Got It']"), Duration.ofSeconds(10)).click();
         } catch (WaitForConditionTimeoutException e) {
@@ -143,7 +143,7 @@ public class BasicTests {
         }
     }
 
-    public static void closeOpenedEditors() {
+    private static void closeOpenedEditors() {
         List<SingleHeighLabelFixture> singleHeighLabelsList = robot.findAll(SingleHeighLabelFixture.class, byXpath("//div[@class='SingleHeightLabel']"));
         LOGGER.log(Level.INFO, "Next opened editors will be closed: " + singleHeighLabelsList);
         for (SingleHeighLabelFixture singleHeighLabel : singleHeighLabelsList) {
