@@ -78,13 +78,24 @@ public class CreateResourceByEditTest extends AbstractKubernetesTest{
         ComponentFixture textFixture = editorSplitter.getEditorTextFixture();
         List<RemoteText> remoteText = textFixture.findAllText();
 
+        System.out.println("==================================================================================");
+
+        for (RemoteText actual_remote_text : remoteText) {
+            System.out.println(actual_remote_text.getText());
+        }
+
+        System.out.println("==================================================================================");
+
         int nameId = 0;
         for (RemoteText actual_remote_text : remoteText){
+            System.out.println(actual_remote_text.getText());
             if ("name".equals(actual_remote_text.getText())){
                 break;
             }
             nameId++;
         }
+
+        System.out.println("==================================================================================");
 
         RemoteText namePlace = remoteText.get(nameId+3); // +1 because we need the next one, +1 because between every 2 real elements is space, +1 because here is the ":"
 
